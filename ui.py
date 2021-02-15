@@ -18,7 +18,7 @@ from functools import reduce
 from zipfile import ZipFile
 import os, requests, json, re, base64, shutil 
 
-# TODO: Verify IDA and Rizin support
+# TODO: Verify IDA support
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -131,6 +131,22 @@ class Ui_Dialog(object):
         msg.setText(text)
         msg.setIcon(icon)
         x = msg.exec_()
+    
+    def which(self,program):
+        def is_exe(fpath):
+            return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+        fpath, fname = os.path.split(program)
+        if fpath:
+            if is_exe(program):
+                return program
+        else:
+            for path in os.environ["PATH"].split(os.pathsep):
+                exe_file = os.path.join(path, program)
+                if is_exe(exe_file):
+                    return exe_file
+
+        return None
 
     def onSuccessConnect(self):
         connected = True
@@ -217,17 +233,17 @@ class Ui_Dialog(object):
         elif tool == "hopper":
             Popen([f"Hopper -e '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "cutter":
-            Popen([f"Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"cd {destination} && Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "ida":
             Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "jeb":
             Popen([f"jeb '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "ghidra":
-            gpr_path, ok = QInputDialog.getText(self, 'Import Ghidra Project', f"The file has been donwloaded to '{file_path}'.\nPlease create a ghidra project with name that matches the name of the file ({os.path.splitext(path[-1])[0]}) and enter full path to the '{os.path.splitext(path[-1])[0]}.gpr' file:")
+            gpr_path, ok = QInputDialog.getText(self, 'Import Ghidra Project', f"The file has been donwloaded to '{file_path}'.\nPlease create a ghidra project with name that matches the name of the file ({path[-1]}) and enter full path to the '{path[-1]}.gpr' file:")
             if ok:
-                with ZipFile(os.path.join(destination,os.path.splitext(path[-1])[0]+".ghdb"), 'w') as zipObj:
+                with ZipFile(os.path.join(destination,path[-1]+".ghdb"), 'w') as zipObj:
                     zipObj.write(gpr_path,os.path.basename(gpr_path))
-                    self.addFolderToZip(zipObj,gpr_path.replace("gpr","rep"),os.path.dirname(gpr_path))
+                    self.addFolderToZip(zipObj,gpr_path.replace(".gpr",".rep"),os.path.dirname(gpr_path))
 
 
     def isCheckedOut(self,path):
@@ -334,6 +350,10 @@ class Ui_Dialog(object):
             if db_file.startswith(filename_no_extension) and filename_extension in supported_db_names:
                 with open(os.path.join(containing_folder,db_file), "rb") as data_file:
                     encoded_file = base64.b64encode(data_file.read())
+                if filename_extension == "hop" or filename_extension == "bndb":
+                    # Hopper and binary ninja do strip the extension by default when saving projects so check if we need to put it back
+                    if os.path.splitext(db_file)[0] != filename:
+                        db_file = filename + f".{filename_extension}"
                 values = {'path': path,"project":self.currentProject,"file":encoded_file,"file_name":db_file}
                 response = requests.post(f'{self.server}/pushdbfile', json=values, auth=(self.username, self.password), verify=self.cert)
                 if response.status_code != 200:
@@ -357,12 +377,12 @@ class Ui_Dialog(object):
             self.currentProjectManifest = response.json()
             self.currentProject = selectedProject
             self.projectTab.setEnabled(True)
-            self.refreshProject()
             self.mainTabWidget.setCurrentIndex(1)
             self.projectTreeView.setProjectData(self.server,self.currentProject,self.username,self.password,self.cert,self)
             self.currentProjectLocalPath = Path(collare_home / self.currentProject)
             self.currentProjectLocalPath.mkdir(exist_ok=True)
             self.populateCurrentProjectUserListing()
+            self.refreshProject()
         
 
     def deleteExistingProjectHandler(self):
@@ -407,12 +427,12 @@ class Ui_Dialog(object):
             self.currentProject = projectName
             self.currentProjectManifest = response.json()
             self.projectTab.setEnabled(True)
-            self.refreshProject()
             self.mainTabWidget.setCurrentIndex(1)
             self.projectTreeView.setProjectData(self.server,self.currentProject,self.username,self.password,self.cert,self)
             self.currentProjectLocalPath = Path(collare_home / self.currentProject)
             self.currentProjectLocalPath.mkdir(exist_ok=True)
             self.populateCurrentProjectUserListing()
+            self.refreshProject()
 
     def mkdir(self,path):
         dirname, ok = QInputDialog.getText(self, 'New Folder', 'Enter name for the folder:')
@@ -457,7 +477,7 @@ class Ui_Dialog(object):
                 self.showPopupBox("Error Deleting Folder","One of the files in this folder is currently checked-out!",QMessageBox.Critical)
 
     def undo_checkout_db_file(self,path):
-        filename = f"{os.path.splitext(path[-2])[0]}.{path[-1]}"
+        filename = f"{path[-2]}.{path[-1]}"
         data = {
             "project": self.currentProject,
             "path": path[:-1],
@@ -478,7 +498,7 @@ class Ui_Dialog(object):
         self.open_db_file(self.getPathToRoot(selected_item[0]))
 
     def open_db_file(self,path):
-        filename = f"{os.path.splitext(path[-2])[0]}.{path[-1]}"
+        filename = f"{path[-2]}.{path[-1]}"
         data = {
             "project": self.currentProject,
             "path": path[:-1],
@@ -504,7 +524,7 @@ class Ui_Dialog(object):
         elif path[-1] == "hop":
             Popen([f"Hopper -d '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
-            Popen([f"Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"cd {destination} && Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
@@ -515,7 +535,7 @@ class Ui_Dialog(object):
         self.refreshProject()
     
     def checkout_db_file(self,path):
-        filename = f"{os.path.splitext(path[-2])[0]}.{path[-1]}"
+        filename = f"{path[-2]}.{path[-1]}"
         data = {
             "project": self.currentProject,
             "path": path[:-1],
@@ -528,6 +548,7 @@ class Ui_Dialog(object):
         elif response.text == "FILE_ALREADY_CHECKEDOUT":
             self.showPopupBox("Error During Check-Out","File already checked out!",QMessageBox.Critical)
             return
+        print(response.text)
         response_data = response.json()
         destination = os.path.join(str(collare_home),*path[:-1]) # Create folder for each file
         if not os.path.exists(destination):
@@ -540,7 +561,7 @@ class Ui_Dialog(object):
         elif path[-1] == "hop":
             Popen([f"Hopper -d '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
-            Popen([f"Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"cd {destination} && Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
@@ -552,7 +573,7 @@ class Ui_Dialog(object):
 
     def checkin_db_file(self,path):
         containing_folder = os.path.join(str(collare_home),*path[:-1]) # Sperate folder for files
-        filename = f"{os.path.splitext(path[-2])[0]}.{path[-1]}"
+        filename = f"{path[-2]}.{path[-1]}"
         if path[-1] == "ghdb":
             gpr_path = os.path.join(containing_folder,os.path.splitext(path[-2])[0] + ".gpr")
             with ZipFile(os.path.join(containing_folder,filename), 'w') as zipObj:
@@ -586,7 +607,7 @@ class Ui_Dialog(object):
             self.refreshProject()
             if response.text == "DONE":
                 if path[-1] in supported_db_names:
-                    remove_path = os.path.splitext(os.path.join(str(collare_home),*path[:-1],path[-2]))[0] + f".{path[-1]}"
+                    remove_path = os.path.join(str(collare_home),*path[:-1],path[-2]) + f".{path[-1]}"
                     print(remove_path)
                     os.remove(remove_path)
                 else:
