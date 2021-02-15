@@ -575,7 +575,7 @@ class Ui_Dialog(object):
         containing_folder = os.path.join(str(collare_home),*path[:-1]) # Sperate folder for files
         filename = f"{path[-2]}.{path[-1]}"
         if path[-1] == "ghdb":
-            gpr_path = os.path.join(containing_folder,os.path.splitext(path[-2])[0] + ".gpr")
+            gpr_path = os.path.join(containing_folder,path[-2] + ".gpr")
             with ZipFile(os.path.join(containing_folder,filename), 'w') as zipObj:
                 zipObj.write(gpr_path,os.path.basename(gpr_path))
                 self.addFolderToZip(zipObj,gpr_path.replace("gpr","rep"),os.path.dirname(gpr_path))
