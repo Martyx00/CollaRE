@@ -553,6 +553,7 @@ class Ui_Dialog(object):
         elif path[-1] == "hop":
             Popen([f"Hopper -d '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
+            # TODO Cutter actually cant open rzdb files at the moment
             Popen([f"cd {destination} && Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
@@ -590,6 +591,7 @@ class Ui_Dialog(object):
         elif path[-1] == "hop":
             Popen([f"Hopper -d '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
+            # TODO Cutter actually cant open rzdb files at the moment
             Popen([f"cd {destination} && Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
