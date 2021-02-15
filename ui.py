@@ -54,11 +54,13 @@ class ProjectTree(QTreeWidget):
                     self.previousHighlight.setSelected(False)
                 self.previousHighlight = item.parent()
             elif item.icon(0).name() == "folder":
+                # Highlight current folder
                 item.setSelected(True)
                 if self.previousHighlight:
                     self.previousHighlight.setSelected(False)
                 self.previousHighlight = item
             else:
+                # Higlight parent of parent (for cases where we hover over DB files listing)
                 item.parent().parent().setSelected(True)
                 if self.previousHighlight and self.previousHighlight != item.parent().parent():
                     self.previousHighlight.setSelected(False)
@@ -96,12 +98,13 @@ class ProjectTree(QTreeWidget):
     def dropEvent(self, event):
         if event.mimeData().hasUrls:
             for url in event.mimeData().urls():
-                print(str(url))
+                # Folders currently not supported
                 if Path(url.path()).is_dir():
-                    self.showPopupBox("Upload Error","Uploading of folders in not supported!",QMessageBox.Critical)
+                    self.showPopupBox("Upload Error","Uploading of folders is not supported!",QMessageBox.Critical)
                     return
                 item = self.itemAt(event.pos())
                 if item:
+                    # Adjust target of the drop event based on where we are
                     if item.icon(0).name() != "folder":
                         if item.parent().icon(0).name() == "folder":
                             item = item.parent()
@@ -109,11 +112,13 @@ class ProjectTree(QTreeWidget):
                             item = item.parent().parent()
                         else:
                             item = item.parent().parent().parent()
+                    # Upload file
                     self.uploadFile(url.path(),self.getPathToRoot(item))
 
 
 class Ui_Dialog(object):
     def prepopulateConnect(self):
+        # Read previously stored connection information
         if os.path.exists(str(collare_home / "connection.json")):
             with open(str(collare_home / "connection.json"),"r") as connection_file:
                 connection_data = json.load(connection_file)
@@ -122,6 +127,7 @@ class Ui_Dialog(object):
                 self.serverCertPathText.setText(connection_data["cert"])
 
     def storeConnectionDetails(self,server,username,cert):
+        # Store connection details
         with open(str(collare_home / "connection.json"),"w") as connection_file:
             json.dump({"username":username,"server":server,"cert":cert}, connection_file)
 
@@ -133,9 +139,9 @@ class Ui_Dialog(object):
         x = msg.exec_()
     
     def which(self,program):
+        # Search for programs in path
         def is_exe(fpath):
             return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
         fpath, fname = os.path.split(program)
         if fpath:
             if is_exe(program):
@@ -149,6 +155,7 @@ class Ui_Dialog(object):
         return None
 
     def onSuccessConnect(self):
+        # Do UI changes upon connection
         connected = True
         self.connectStatusLabel.setText("Connected")
         self.connectStatusLabel.setStyleSheet("color: lightgreen")
@@ -165,6 +172,7 @@ class Ui_Dialog(object):
         #self.projectTab.setEnabled(True)
     
     def onDisconnect(self):
+        # Do UI changes upon disconnect
         connected = False
         self.connectStatusLabel.setText("Disconnected")
         self.connectStatusLabel.setStyleSheet("color: black")
@@ -179,6 +187,7 @@ class Ui_Dialog(object):
         #self.projectTab.setEnabled(False)
 
     def getPathToRoot(self,treeItem):
+        # Traces the path to root of the manifest file
         path = [treeItem.text(0)]
         tmpItem = treeItem
         while tmpItem.parent():
@@ -186,7 +195,8 @@ class Ui_Dialog(object):
             path.insert(0, tmpItem.text(0))
         return path
 
-    def addFolderToZip(self, zip_file, folder,strip_path): 
+    def addFolderToZip(self, zip_file, folder,strip_path):
+        # Adds folder to zip file (used to handle Ghidra projects)
         for file in os.listdir(folder):
             full_path = os.path.join(folder, file)
             if os.path.isfile(full_path):
@@ -195,6 +205,8 @@ class Ui_Dialog(object):
                 self.addFolderToZip(zip_file, full_path,strip_path)
 
     def autoRemoveDirs(self):
+        # Automatically remove directories that are not matching anything in current manifest
+        # This means that local files reflect state before someone else deleted something
         mag = [self.currentProjectManifest[self.currentProject]]
         path_mag = [os.path.join(str(collare_home),self.currentProject)]
         while mag:
@@ -212,6 +224,7 @@ class Ui_Dialog(object):
 
 
     def processIn(self,tool,path):
+        # Process the initial binary in selected tool
         data = {
             "project": self.currentProject,
             "path": path[:-1],
@@ -246,6 +259,7 @@ class Ui_Dialog(object):
 
 
     def isCheckedOut(self,path):
+        # Verify if the file is currently checkedout
         checkout, current_user = False, False
         if reduce(dict.get,path[:-1],self.currentProjectManifest)["__rev_dbs__"][path[-1]] != None:
             checkout = True
@@ -258,11 +272,15 @@ class Ui_Dialog(object):
         clickedItem = self.projectTreeView.itemAt(event)
         self.menu = QtWidgets.QMenu(self.projectTreeView)
         item = self.projectTreeView.itemAt(event)
+        self.menu.addSection("Project")
+        refresh = self.menu.addAction(QIcon.fromTheme("browser-reload"),"Refresh") # TODO ugly icon
         if item.icon(0).name() == "folder":
+            # Right click on folder
             self.menu.addSection("Folder operations")
             create_folder = self.menu.addAction(QIcon.fromTheme("folder-new"),"New Folder")
             delete_folder = self.menu.addAction(QIcon.fromTheme("edit-delete"),"Delete Folder")
         elif item.icon(0).name() == "application-x-executable":
+            # Right click on original binary
             self.menu.addSection("Process in:")
             open_ida = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","i64.png")),"IDA Pro")
             open_rizin = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","rzdb.png")),"Cutter")
@@ -288,8 +306,8 @@ class Ui_Dialog(object):
                 if "jdb2" in disabled_tool:
                     open_jeb.setEnabled(False)
         else:
+            # Right click on one of the DB files
             self.menu.addSection("File operations")
-            
             open_file = self.menu.addAction(QIcon.fromTheme("document-open"),"Open File")
             checkout = self.menu.addAction(QIcon.fromTheme("go-bottom"),"Check-out")
             checkin = self.menu.addAction(QIcon.fromTheme("go-top"),"Check-in")
@@ -310,7 +328,6 @@ class Ui_Dialog(object):
         performed_action = self.menu.exec_(self.projectTreeView.mapToGlobal(event))
         # Handle actions below
         if performed_action:
-            print(str(performed_action.text()))
             if performed_action.text() == "New Folder":
                 self.mkdir(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Delete Folder":
@@ -339,8 +356,12 @@ class Ui_Dialog(object):
                 self.undo_checkout_db_file(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Open File":
                 self.open_db_file(self.getPathToRoot(clickedItem))
+            elif performed_action.text() == "Refresh":
+                self.refreshProject()
     
     def pushLocal(self,path):
+        # Walk through the folder in 'path' and push all known (supported_db_names) files to the server
+        # Files that already exists are uploaded but silently ignored by the server
         containing_folder = os.path.join(str(collare_home),*path) # Sperate folder for files
         filename = path[-1]
         filename_no_extension = os.path.splitext(filename)[0]
@@ -361,6 +382,7 @@ class Ui_Dialog(object):
 
 
     def existingProjectSelectHandler(self):
+        # Select existing project from the server and open it
         try:
             selectedProject = self.existingProjectsList.selectedItems()[0].text()
         except:
@@ -385,6 +407,7 @@ class Ui_Dialog(object):
         
 
     def deleteExistingProjectHandler(self):
+        # Delete remote project
         try:
             selectedProject = self.existingProjectsList.selectedItems()[0].text()
         except:
@@ -402,6 +425,7 @@ class Ui_Dialog(object):
                 self.populateExistingProjects()
 
     def createNewProjectClickHandler(self):
+        # Create new project
         projectName = self.newProjectName.text()
         if not re.match(r'^\w+$',projectName):
             self.showPopupBox("Invalid Project Name","Project name can contain only letters, numbers and '_' (underscores).",QMessageBox.Critical)
@@ -434,6 +458,7 @@ class Ui_Dialog(object):
             self.refreshProject()
 
     def mkdir(self,path):
+        # Create directory
         dirname, ok = QInputDialog.getText(self, 'New Folder', 'Enter name for the folder:')
         if ok:
             if not re.match(r'^\w+$',dirname):
@@ -452,6 +477,7 @@ class Ui_Dialog(object):
             self.refreshProject()
     
     def deletedir(self,path):
+        # Delete directory
         if len(path) == 1:
             self.showPopupBox("Error Deleting Folder","Cannot delete project root!",QMessageBox.Critical)
             return
@@ -476,6 +502,7 @@ class Ui_Dialog(object):
                 self.showPopupBox("Error Deleting Folder","One of the files in this folder is currently checked-out!",QMessageBox.Critical)
 
     def undo_checkout_db_file(self,path):
+        # Removes checkout flag from the file
         filename = f"{path[-2]}.{path[-1]}"
         data = {
             "project": self.currentProject,
@@ -493,10 +520,13 @@ class Ui_Dialog(object):
 
 
     def openDoubleClickWrapper(self):
+        # Double click on item, open only if parent is binary - i.e. we are clicking on db file
         selected_item = self.projectTreeView.selectedItems()
-        self.open_db_file(self.getPathToRoot(selected_item[0]))
+        if selected_item[0].parent().icon(0).name() == "application-x-executable":
+            self.open_db_file(self.getPathToRoot(selected_item[0]))
 
     def open_db_file(self,path):
+        # Opens db file based on the relevant tool
         filename = f"{path[-2]}.{path[-1]}"
         data = {
             "project": self.currentProject,
@@ -534,6 +564,7 @@ class Ui_Dialog(object):
         self.refreshProject()
     
     def checkout_db_file(self,path):
+        # Checks-out the DB file for editing
         filename = f"{path[-2]}.{path[-1]}"
         data = {
             "project": self.currentProject,
@@ -547,7 +578,6 @@ class Ui_Dialog(object):
         elif response.text == "FILE_ALREADY_CHECKEDOUT":
             self.showPopupBox("Error During Check-Out","File already checked out!",QMessageBox.Critical)
             return
-        print(response.text)
         response_data = response.json()
         destination = os.path.join(str(collare_home),*path[:-1]) # Create folder for each file
         if not os.path.exists(destination):
@@ -571,6 +601,7 @@ class Ui_Dialog(object):
         self.refreshProject()
 
     def checkin_db_file(self,path):
+        # Performs check-in of the chcked-out file, this is the only way to update DB files on the server
         containing_folder = os.path.join(str(collare_home),*path[:-1]) # Sperate folder for files
         filename = f"{path[-2]}.{path[-1]}"
         if path[-1] == "ghdb":
@@ -589,6 +620,7 @@ class Ui_Dialog(object):
         self.refreshProject()
 
     def deletefile(self,path):
+        # Removes any file from the server (and local) storage
         if len(path) == 1:
             self.showPopupBox("Error Deleting Folder","Cannot delete project root!",QMessageBox.Critical)
             return
@@ -607,7 +639,6 @@ class Ui_Dialog(object):
             if response.text == "DONE":
                 if path[-1] in supported_db_names:
                     remove_path = os.path.join(str(collare_home),*path[:-1],path[-2]) + f".{path[-1]}"
-                    print(remove_path)
                     os.remove(remove_path)
                 else:
                     shutil.rmtree(os.path.join(str(collare_home),*path))
@@ -616,6 +647,7 @@ class Ui_Dialog(object):
                 
 
     def refreshProject(self):
+        # Refershes the view of the project
         response = requests.get(f'{self.server}/openproject', params={"project":self.currentProject}, auth=(self.username, self.password), verify=self.cert)
         if response.status_code != 200:
             self.showPopupBox("Error Refershing Project Data","Something went horribly wrong!",QMessageBox.Critical)
@@ -718,22 +750,6 @@ class Ui_Dialog(object):
 
     def refreshProjectTree(self):
         self.projectTreeView.clear()
-        value = {"/":{
-            "folder":{
-                "file":{
-                    "__locked__":None,
-                    "__file__type__": True,
-                    "__rev_dbs__": ["ida","riz"]
-                },
-                "__file__type__": False
-            },
-            "file2":{
-                "__locked__":"lol",
-                "__file__type__": True,
-                "__rev_dbs__": {"bndb":None}
-            },
-            "__file__type__": False
-        }}
         def fill_item(item,value):
             if type(value) is dict:
                 for key, val in sorted(value.items()):
