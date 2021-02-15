@@ -331,9 +331,9 @@ class Ui_Dialog(object):
             if performed_action.text() == "New Folder":
                 self.mkdir(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Delete Folder":
-                self.deletedir(self.getPathToRoot(clickedItem))
+                self.deleteDir(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Delete File":
-                self.deletefile(self.getPathToRoot(clickedItem))
+                self.deleteFile(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Binary Ninja":
                 self.processIn("binja",self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Hopper Disassembler":
@@ -349,13 +349,13 @@ class Ui_Dialog(object):
             elif performed_action.text() == "Push Local DBs":
                 self.pushLocal(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Check-out":
-                self.checkout_db_file(self.getPathToRoot(clickedItem))
+                self.checkoutDBFile(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Check-in":
-                self.checkin_db_file(self.getPathToRoot(clickedItem))
+                self.checkinDBFile(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Undo Check-out":
-                self.undo_checkout_db_file(self.getPathToRoot(clickedItem))
+                self.undoCheckoutDBFile(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Open File":
-                self.open_db_file(self.getPathToRoot(clickedItem))
+                self.openDBFile(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Refresh":
                 self.refreshProject()
     
@@ -476,7 +476,7 @@ class Ui_Dialog(object):
                 self.showPopupBox("Error Creating Folder","Folder with this name already exists!",QMessageBox.Critical)
             self.refreshProject()
     
-    def deletedir(self,path):
+    def deleteDir(self,path):
         # Delete directory
         if len(path) == 1:
             self.showPopupBox("Error Deleting Folder","Cannot delete project root!",QMessageBox.Critical)
@@ -501,7 +501,7 @@ class Ui_Dialog(object):
             elif response.text == "CHECKEDOUT_FILE":
                 self.showPopupBox("Error Deleting Folder","One of the files in this folder is currently checked-out!",QMessageBox.Critical)
 
-    def undo_checkout_db_file(self,path):
+    def undoCheckoutDBFile(self,path):
         # Removes checkout flag from the file
         filename = f"{path[-2]}.{path[-1]}"
         data = {
@@ -523,9 +523,9 @@ class Ui_Dialog(object):
         # Double click on item, open only if parent is binary - i.e. we are clicking on db file
         selected_item = self.projectTreeView.selectedItems()
         if selected_item[0].parent().icon(0).name() == "application-x-executable":
-            self.open_db_file(self.getPathToRoot(selected_item[0]))
+            self.openDBFile(self.getPathToRoot(selected_item[0]))
 
-    def open_db_file(self,path):
+    def openDBFile(self,path):
         # Opens db file based on the relevant tool
         filename = f"{path[-2]}.{path[-1]}"
         data = {
@@ -564,7 +564,7 @@ class Ui_Dialog(object):
             Popen([f"ghidraRun '{os.path.join(destination,filename.replace('ghdb','gpr'))}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
     
-    def checkout_db_file(self,path):
+    def checkoutDBFile(self,path):
         # Checks-out the DB file for editing
         filename = f"{path[-2]}.{path[-1]}"
         data = {
@@ -602,7 +602,7 @@ class Ui_Dialog(object):
             Popen([f"ghidraRun '{os.path.join(destination,filename.replace('ghdb','gpr'))}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
 
-    def checkin_db_file(self,path):
+    def checkinDBFile(self,path):
         # Performs check-in of the chcked-out file, this is the only way to update DB files on the server
         containing_folder = os.path.join(str(collare_home),*path[:-1]) # Sperate folder for files
         filename = f"{path[-2]}.{path[-1]}"
@@ -621,7 +621,7 @@ class Ui_Dialog(object):
             self.showPopupBox("Error During Check-In","File is not checked-out to you!",QMessageBox.Critical)
         self.refreshProject()
 
-    def deletefile(self,path):
+    def deleteFile(self,path):
         # Removes any file from the server (and local) storage
         if len(path) == 1:
             self.showPopupBox("Error Deleting Folder","Cannot delete project root!",QMessageBox.Critical)

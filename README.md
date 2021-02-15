@@ -9,6 +9,7 @@ The [back-end](TODO) of the tool is a simple `Flask app` with `nginx` in front o
 ## Supported Tools
 
 ### Cutter (Rizin)
+
 When saving Cutter (rizin) projects you have to append `.rzdb` manually.
 
 ### Binary Ninja
