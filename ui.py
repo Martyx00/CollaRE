@@ -200,15 +200,14 @@ class Ui_Dialog(object):
         while mag:
             current_folder = mag.pop()
             current_fs_path = path_mag.pop()
-            try:
-                for fs_item in os.listdir(current_fs_path):
-                    if not fs_item in current_folder.keys():
-                        shutil.rmtree(os.path.join(current_fs_path,fs_item))
-                    elif not current_folder[fs_item]["__file__type__"]:
-                        mag.append(current_folder[fs_item])
-                        path_mag.append(os.path.join(current_fs_path,fs_item))
-            except:
-                pass
+            for fs_item in os.listdir(current_fs_path):
+                if not fs_item in current_folder.keys():# and not current_folder[fs_item]["__file__type__"]:
+                    # Delete only folders as those are reflected in manifest file immediatelly 
+                    shutil.rmtree(os.path.join(current_fs_path,fs_item))
+                elif not current_folder[fs_item]["__file__type__"]:
+                    # Add folders to magazine
+                    mag.append(current_folder[fs_item])
+                    path_mag.append(os.path.join(current_fs_path,fs_item))
 
 
 
