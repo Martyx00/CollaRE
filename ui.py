@@ -1086,6 +1086,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "CollaRE Client"))
+        Dialog.setWindowIcon(QIcon(os.path.join(current_running_file_dir,"icons","collare.png")))
         self.label.setText(_translate("Dialog", "Server (https://remote.com/):"))
         self.label_2.setText(_translate("Dialog", "Username:"))
         self.label_3.setText(_translate("Dialog", "Password:"))
