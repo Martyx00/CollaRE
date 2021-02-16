@@ -305,6 +305,19 @@ class Ui_Dialog(object):
                     open_ghidra.setEnabled(False)
                 if "jdb2" in disabled_tool:
                     open_jeb.setEnabled(False)
+            # Enable/Disable tools based on PATH
+            if not self.which("ida64"):
+                open_ida.setEnabled(False)
+            if not self.which("binaryninja"):
+                open_binja.setEnabled(False)
+            if not self.which("Hopper"):
+                open_hop.setEnabled(False)
+            if not self.which("Cutter"):
+                open_rizin.setEnabled(False)
+            if not self.which("ghidraRun"):
+                open_ghidra.setEnabled(False)
+            if not self.which("jeb"):
+                open_jeb.setEnabled(False)
         else:
             # Right click on one of the DB files
             self.menu.addSection("File operations")
