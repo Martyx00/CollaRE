@@ -11,12 +11,12 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 # SAVE THIS
 from PyQt5.QtGui import QStandardItemModel, QIcon
-from PyQt5.QtWidgets import QMessageBox, QTreeWidgetItem, QFileIconProvider,QTreeWidget, QInputDialog, QHBoxLayout, QFrame
+from PyQt5.QtWidgets import QMessageBox, QTreeWidgetItem, QFileIconProvider,QTreeWidget, QInputDialog, QHBoxLayout, QFrame, QApplication
 from pathlib import Path
 from subprocess import Popen
 from functools import reduce
 from zipfile import ZipFile
-import os, requests, json, re, base64, shutil 
+import os, requests, json, re, base64, shutil , sys
 
 # TODO: Verify IDA support
 
@@ -1118,3 +1118,21 @@ class Ui_Dialog(object):
         self.currentProjectRemoveUsersButton.setText(_translate("Dialog", "Remove Users"))
         self.currentProjectAddUsersButton.setText(_translate("Dialog", "Add Users"))
         self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.adminTab), _translate("Dialog", "Admin"))
+
+
+class CollaRE(QtWidgets.QMainWindow, Ui_Dialog):
+    def __init__(self, parent=None):
+        super(CollaRE, self).__init__(parent)
+        self.setupUi(self)
+
+def main():
+    app = QApplication(sys.argv)
+    form = CollaRE()
+    form.show()
+    app.exec_()
+
+if __name__ == '__main__':
+    # Create projects directory if it does not exist
+    if not os.path.isdir(collare_home):
+        os.mkdir(collare_home)
+    main()
