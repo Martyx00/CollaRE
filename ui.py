@@ -11,7 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 # SAVE THIS
 from PyQt5.QtGui import QStandardItemModel, QIcon
-from PyQt5.QtWidgets import QMessageBox, QTreeWidgetItem, QFileIconProvider,QTreeWidget, QInputDialog
+from PyQt5.QtWidgets import QMessageBox, QTreeWidgetItem, QFileIconProvider,QTreeWidget, QInputDialog, QHBoxLayout, QFrame
 from pathlib import Path
 from subprocess import Popen
 from functools import reduce
@@ -156,7 +156,7 @@ class Ui_Dialog(object):
 
     def onSuccessConnect(self):
         # Do UI changes upon connection
-        connected = True
+        self.connected = True
         self.connectStatusLabel.setText("Connected")
         self.connectStatusLabel.setStyleSheet("color: lightgreen")
         self.passwordText.setDisabled(True)
@@ -173,7 +173,7 @@ class Ui_Dialog(object):
     
     def onDisconnect(self):
         # Do UI changes upon disconnect
-        connected = False
+        self.connected = False
         self.connectStatusLabel.setText("Disconnected")
         self.connectStatusLabel.setStyleSheet("color: black")
         self.passwordText.setDisabled(False)
@@ -816,11 +816,20 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(1021, 747)
-        Dialog.setFixedSize(Dialog.size())
+        Dialog.setMinimumSize(Dialog.size())
+
+        frame = QFrame()
+        Dialog.setCentralWidget(frame)
+        layout = QHBoxLayout()
+        frame.setLayout(layout)
+        
         self.mainTabWidget = QtWidgets.QTabWidget(Dialog)
         self.mainTabWidget.setEnabled(True)
         self.mainTabWidget.setGeometry(QtCore.QRect(20, 10, 981, 721))
         self.mainTabWidget.setObjectName("mainTabWidget")
+
+        layout.addWidget(self.mainTabWidget)
+
         self.connectionTab = QtWidgets.QWidget()
         self.connectionTab.setObjectName("connectionTab")
         self.serverText = QtWidgets.QLineEdit(self.connectionTab)
@@ -940,6 +949,9 @@ class Ui_Dialog(object):
         self.projectTab = QtWidgets.QWidget()
         self.projectTab.setEnabled(False)
         self.projectTab.setObjectName("projectTab")
+        projectLayout = QHBoxLayout()
+        self.projectTab.setLayout(projectLayout)
+        
         #self.projectTreeView = QtWidgets.QTreeWidget(self.projectTab)
         self.projectTreeView = ProjectTree(self.projectTab)
         self.projectTreeView.setGeometry(QtCore.QRect(10, 10, 961, 671))
@@ -947,7 +959,7 @@ class Ui_Dialog(object):
         self.projectTreeView.customContextMenuRequested.connect(self.rightClickMenuHandle)  
         self.projectTreeView.setHeaderItem(QTreeWidgetItem(["File","Status"]))
         self.projectTreeView.setColumnWidth(0,500)
-
+        projectLayout.addWidget(self.projectTreeView)
 
         self.projectTreeView.setObjectName("projectTreeView")
         self.mainTabWidget.addTab(self.projectTab, "")
