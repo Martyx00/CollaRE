@@ -855,6 +855,7 @@ class Ui_Dialog(object):
         self.serverCertPathText.setGeometry(QtCore.QRect(250, 140, 531, 25))
         self.serverCertPathText.setEchoMode(QtWidgets.QLineEdit.Normal)
         self.serverCertPathText.setObjectName("serverCertPathText")
+        
        
         self.label_6 = QtWidgets.QLabel(self.connectionTab)
         self.label_6.setGeometry(QtCore.QRect(40, 240, 161, 17))
@@ -942,6 +943,7 @@ class Ui_Dialog(object):
         self.label_3.raise_()
         self.usernameText.raise_()
         self.passwordText.raise_()
+        self.serverCertPathText.raise_()
         self.existingProjectsList.raise_()
         self.label_6.raise_()
         self.newProjectFrame.raise_()
@@ -1126,13 +1128,14 @@ class CollaRE(QtWidgets.QMainWindow, Ui_Dialog):
         self.setupUi(self)
 
 def main():
+    # Create projects directory if it does not exist
+    if not os.path.isdir(collare_home):
+        os.mkdir(collare_home)
     app = QApplication(sys.argv)
     form = CollaRE()
     form.show()
     app.exec_()
 
 if __name__ == '__main__':
-    # Create projects directory if it does not exist
-    if not os.path.isdir(collare_home):
-        os.mkdir(collare_home)
+    
     main()
