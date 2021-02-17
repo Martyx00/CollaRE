@@ -1,6 +1,9 @@
 
 # CollaRE
 
+![CollaRE](./collare/icons/collare-full-white.png.jpg)
+
+
 ## Intorduction
 
 CollareRE is a tool for collaborative reverse engineering that aims to allow teams that do need to use more then one tool during a project to collaborate without the need to share the files on a seprate locations. It also contains a very simple user management and as such can be used for a multi-project servers where different teams work on different projects.
