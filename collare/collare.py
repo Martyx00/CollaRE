@@ -19,6 +19,7 @@ from zipfile import ZipFile
 import os, requests, json, re, base64, shutil , sys
 
 # TODO: Verify IDA support
+# TODO: Keep the file checkedout
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -650,6 +651,11 @@ class Ui_Dialog(object):
 
     def checkinDBFile(self,path):
         # Performs check-in of the chcked-out file, this is the only way to update DB files on the server
+        checkout = False
+        questionBox = QMessageBox()
+        answer = questionBox.question(self,"Check-in", f"Would you like to keep the file checked-out?", questionBox.Yes | questionBox.No)
+        if answer == questionBox.Yes:
+            checkout = True
         containing_folder = os.path.join(str(collare_home),*path[:-1]) # Sperate folder for files
         filename = f"{path[-2]}.{path[-1]}"
         if path[-1] == "ghdb":
@@ -659,7 +665,7 @@ class Ui_Dialog(object):
                 self.addFolderToZip(zipObj,gpr_path.replace("gpr","rep"),os.path.dirname(gpr_path))
         with open(os.path.join(containing_folder,filename), "rb") as data_file:
             encoded_file = base64.b64encode(data_file.read())
-        values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename}
+        values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename,"checkout":checkout}
         response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert)
         if response.status_code != 200:
             self.showPopupBox("Error During Check-In","Something went horribly wrong!",QMessageBox.Critical)
