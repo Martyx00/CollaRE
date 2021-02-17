@@ -98,10 +98,8 @@ class ProjectTree(QTreeWidget):
             current_path = path + (os.path.normpath(directory).split(os.path.sep)[base_path_len-1:])
             for d in subdirectories:
                 self.mkdir(current_path,d)
-                #print(str(current_path))
             for f in files:
                 self.uploadFile(os.path.join(directory,f),current_path)
-
 
 
     def mkdir(self,path,dirname):
@@ -747,6 +745,8 @@ class Ui_Dialog(object):
         self.newProjectUsersList.addItems(user_list["users"])
         self.projectAllUsersView.clear()
         self.projectAllUsersView.addItems(user_list["users"])
+        self.deleteGlobalUsersList.clear()
+        self.deleteGlobalUsersList.addItems(user_list["users"])
     
     def populateCurrentProjectUserListing(self):
         response = requests.get(f'{self.server}/getprojectusers', params={"project":self.currentProject}, auth=(self.username, self.password), verify=self.cert)
@@ -796,6 +796,22 @@ class Ui_Dialog(object):
             response = requests.post(f'{self.server}/deleteprojectuser', json=data, auth=(self.username, self.password), verify=self.cert)
             if response.status_code != 200:
                 self.showPopupBox("Error Deleting Project Users","Something went horribly wrong!",QMessageBox.Critical)
+            self.populateCurrentProjectUserListing()
+
+    def deleteGlobalUsersHandler(self):
+        if self.username != "admin":
+            self.showPopupBox("Error","Only user 'admin' can do that!",QMessageBox.Critical)
+            return
+        selectedItems = self.deleteGlobalUsersList.selectedItems()
+        user_list = []
+        for item in selectedItems:
+            user_list.append(item.text())
+        if user_list:
+            data = {"users":user_list}
+            response = requests.post(f'{self.server}/deluser', json=data, auth=(self.username, self.password), verify=self.cert)
+            if response.status_code != 200:
+                self.showPopupBox("Error Deleting Global Users","Something went horribly wrong!",QMessageBox.Critical)
+            self.populateAllUserListings()
             self.populateCurrentProjectUserListing()
 
     def refreshProjectTree(self):
@@ -1108,6 +1124,28 @@ class Ui_Dialog(object):
         self.currentProjectAddUsersButton = QtWidgets.QPushButton(self.frame_6)
         self.currentProjectAddUsersButton.setGeometry(QtCore.QRect(290, 350, 261, 25))
         self.currentProjectAddUsersButton.setObjectName("currentProjectAddUsersButton")
+
+        self.deleteGlobalUsersFrame = QtWidgets.QFrame(self.adminTab)
+        self.deleteGlobalUsersFrame.setGeometry(QtCore.QRect(20, 410, 371, 271))
+        self.deleteGlobalUsersFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.deleteGlobalUsersFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.deleteGlobalUsersFrame.setObjectName("deleteGlobalUsersFrame")
+        self.deleteGlobalUsersLabel = QtWidgets.QLabel(self.deleteGlobalUsersFrame)
+        self.deleteGlobalUsersLabel.setGeometry(QtCore.QRect(20, 10, 201, 17))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.deleteGlobalUsersLabel.setFont(font)
+        self.deleteGlobalUsersLabel.setObjectName("deleteGlobalUsersLabel")
+        self.deleteGlobalUsersList = QtWidgets.QListWidget(self.deleteGlobalUsersFrame)
+        self.deleteGlobalUsersList.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.deleteGlobalUsersList.setGeometry(QtCore.QRect(20, 30, 331, 192))
+        self.deleteGlobalUsersList.setObjectName("deleteGlobalUsersList")
+        self.deleteGlobalUsersButton = QtWidgets.QPushButton(self.deleteGlobalUsersFrame)
+        self.deleteGlobalUsersButton.setGeometry(QtCore.QRect(20, 230, 331, 25))
+        self.deleteGlobalUsersButton.setObjectName("deleteGlobalUsersButton")
+
+
         self.mainTabWidget.addTab(self.adminTab, "")
 
         self.retranslateUi(Dialog)
@@ -1128,6 +1166,7 @@ class Ui_Dialog(object):
         self.currentProjectRemoveUsersButton.clicked.connect(self.deleteProjectUserClickHandler)
         self.changePasswordButton.clicked.connect(self.changePasswordClickHandler)
         self.projectTreeView.itemDoubleClicked.connect(self.openDoubleClickWrapper)
+        self.deleteGlobalUsersButton.clicked.connect(self.deleteGlobalUsersHandler)
         
 
         self.prepopulateConnect()
@@ -1167,6 +1206,8 @@ class Ui_Dialog(object):
         self.label_19.setText(_translate("Dialog", "All users:"))
         self.currentProjectRemoveUsersButton.setText(_translate("Dialog", "Remove Users"))
         self.currentProjectAddUsersButton.setText(_translate("Dialog", "Add Users"))
+        self.deleteGlobalUsersLabel.setText(_translate("Dialog", "Remove Users (admin only):"))
+        self.deleteGlobalUsersButton.setText(_translate("Dialog", "Delete Selected Users"))
         self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.adminTab), _translate("Dialog", "Admin"))
 
 
