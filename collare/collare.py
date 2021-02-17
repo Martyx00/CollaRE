@@ -87,6 +87,40 @@ class ProjectTree(QTreeWidget):
             self.showPopupBox("Error Uploading File","File already exists!",QMessageBox.Critical)
         self.parent.refreshProject()
 
+    def uploadDir(self,fs_path,path):
+        # Creates the initial dir
+        self.mkdir(path,os.path.basename(fs_path))
+        # Base path used to get rid of the fs_path elements
+        base_path_len = len(os.path.normpath(fs_path).split(os.path.sep))
+        for directory, subdirectories, files in os.walk(fs_path):
+            print(directory)
+            print(subdirectories)
+            current_path = path + (os.path.normpath(directory).split(os.path.sep)[base_path_len-1:])
+            for d in subdirectories:
+                self.mkdir(current_path,d)
+                #print(str(current_path))
+            for f in files:
+                self.uploadFile(os.path.join(directory,f),current_path)
+
+
+
+    def mkdir(self,path,dirname):
+        # Create directory
+        if not re.match(r'^\w+$',dirname):
+            self.showPopupBox("Invalid Folder Name","Folder name can contain only letters, numbers and '_' (underscores).",QMessageBox.Critical)
+            return
+        data = {
+            "project":self.projectName,
+            "path": path,
+            "dirname": dirname
+        }
+        response = requests.post(f'{self.server}/mkdir', json=data, auth=(self.username, self.password), verify=self.cert)
+        if response.status_code != 200:
+            self.showPopupBox("Error Creating Folder","Something went horribly wrong!",QMessageBox.Critical)
+        elif response.text == "FOLDER_ALREADY_EXISTS":
+            self.showPopupBox("Error Creating Folder","Folder with this name already exists!",QMessageBox.Critical)
+        self.parent.refreshProject()
+
     def getPathToRoot(self,treeItem):
         path = [treeItem.text(0)]
         tmpItem = treeItem
@@ -99,9 +133,7 @@ class ProjectTree(QTreeWidget):
         if event.mimeData().hasUrls:
             for url in event.mimeData().urls():
                 # Folders currently not supported
-                if Path(url.path()).is_dir():
-                    self.showPopupBox("Upload Error","Uploading of folders is not supported!",QMessageBox.Critical)
-                    return
+                
                 item = self.itemAt(event.pos())
                 if item:
                     # Adjust target of the drop event based on where we are
@@ -113,7 +145,10 @@ class ProjectTree(QTreeWidget):
                         else:
                             item = item.parent().parent().parent()
                     # Upload file
-                    self.uploadFile(url.path(),self.getPathToRoot(item))
+                    if Path(url.path()).is_dir():
+                        self.uploadDir(url.path(),self.getPathToRoot(item))
+                    else:
+                        self.uploadFile(url.path(),self.getPathToRoot(item))
 
 
 class Ui_Dialog(object):
