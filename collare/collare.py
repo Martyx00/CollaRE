@@ -313,6 +313,7 @@ class Ui_Dialog(object):
             self.menu.addSection("Folder operations")
             create_folder = self.menu.addAction(QIcon.fromTheme("folder-new"),"New Folder")
             delete_folder = self.menu.addAction(QIcon.fromTheme("edit-delete"),"Delete Folder")
+            rename_folder = self.menu.addAction(QIcon.fromTheme("edit-select-all"),"Rename")
         elif item.icon(0).name() == "application-x-executable":
             # Right click on original binary
             self.menu.addSection("Process in:")
@@ -405,6 +406,28 @@ class Ui_Dialog(object):
                 self.openDBFile(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Refresh":
                 self.refreshProject()
+            elif performed_action.text() == "Rename":
+                self.renameFolder(self.getPathToRoot(clickedItem),clickedItem)
+
+    def renameFolder(self,path,item):
+        dirname, ok = QInputDialog.getText(self, 'Rename Folder', f"Enter new name for the folder '{item.text(0)}':")
+        if ok:
+            if not re.match(r'^\w+$',dirname):
+                self.showPopupBox("Invalid Folder Name","Folder name can contain only letters, numbers and '_' (underscores).",QMessageBox.Critical)
+                return
+            data = {
+                "project":self.currentProject,
+                "path": path,
+                "dirname": dirname
+            }
+            response = requests.post(f'{self.server}/rename', json=data, auth=(self.username, self.password), verify=self.cert)
+            if response.status_code != 200:
+                self.showPopupBox("Error Renaming Folder","Something went horribly wrong!",QMessageBox.Critical)
+            elif response.text == "FOLDER_ALREADY_EXISTS":
+                self.showPopupBox("Error Renaming Folder","Folder with this name already exists!",QMessageBox.Critical)
+            self.refreshProject()
+        
+        
     
     def pushLocal(self,path):
         # Walk through the folder in 'path' and push all known (supported_db_names) files to the server
