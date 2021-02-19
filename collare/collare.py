@@ -19,7 +19,6 @@ from zipfile import ZipFile
 import os, requests, json, re, base64, shutil , sys
 
 # TODO: Verify IDA support
-# TODO: Keep the file checkedout
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -89,13 +88,19 @@ class ProjectTree(QTreeWidget):
         self.parent.refreshProject()
 
     def uploadDir(self,fs_path,path):
+        if not re.match(r'^\w+$',os.path.basename(fs_path)):
+            self.showPopupBox("Invalid Folder Name",f"Folder name can contain only letters, numbers and '_' (underscores). Failed with: {os.path.basename(fs_path)}",QMessageBox.Critical)
+            return 
+        for directory, subdirectories, files in os.walk(fs_path):
+            for d in subdirectories:
+                if not re.match(r'^\w+$',d):
+                    self.showPopupBox("Invalid Folder Name",f"Folder name can contain only letters, numbers and '_' (underscores). Failed with: {d}",QMessageBox.Critical)
+                    return 
         # Creates the initial dir
         self.mkdir(path,os.path.basename(fs_path))
         # Base path used to get rid of the fs_path elements
         base_path_len = len(os.path.normpath(fs_path).split(os.path.sep))
         for directory, subdirectories, files in os.walk(fs_path):
-            print(directory)
-            print(subdirectories)
             current_path = path + (os.path.normpath(directory).split(os.path.sep)[base_path_len-1:])
             for d in subdirectories:
                 self.mkdir(current_path,d)

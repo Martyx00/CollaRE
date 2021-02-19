@@ -44,6 +44,30 @@ The process of initializing the database with Ghidra is a bit more complicated a
 
 After deploying the server side as mentioned in its own readme file, it is necessary to distribute the used certificate file to all users of the application as well as use the default `admin` account with `admin` password to create other user accounts (don't forget to change password of `admin` user) via the `Admin` tab. When the users are configured anyone can create their own projects and start working with the tool itself.
 
+### Creating projects
+
+To create a project user has to first authenticate to the remote server by entering the URL, credentials and provide a certificate to validate the server identity. After that, the status will change to `Connected` and it is possible to select or delete existing projects or create a new project by simply entering the name (alphanumeric characters and `_` only) and selecting users that will be participating on the project (can be changed later in the `Admin` tab). Note that the user that is creating the project is automatically added to the user list so you do not have to select yourself.
+
+![CollaRE](./images/new_project.gif)
+
+### Project Structure and File Uploads
+
+Once you are on the `Project View` tab you can create new folders (alphanumeric characters and `_` only, sorry) and use drag and drop to upload files (or folders).
+
+![CollaRE](./images/create_upload.gif)
+
+### Pushing Local DB Files
+
+Since the tool currently does not have any plugins or native hooks that would allow automatic uploads when the project is saved it is required that the local DB file push is triggered manually after creating the desired databases. This can be done by right-clicking on the uploaded binary file and choosing the tool you want to process the binary in. You can do basic analysis but it is strongly recommended to just save the file without changing anything (apart from appending `rzdb` in Cutter and completely different process with Ghidra). DO NOT CHANGE THE PATH AND FILENAME. After doing this and closing the disassembler you can just right click on the binary name and select option `Push Local DBs`. This will upload the local database and from now on when you want to work with the DB file you need to perform `Check-out`. Note that each binary can be processed in all the tools separately but only one DB file per binary and tool can exist.
+
+![CollaRE](./images/db_files.gif)
+
+
+### Working with DB Files
+
+When you just want to inspect the file you can right-click the desired DB file and select option `Open File` (or just double-click). If the file is checked-out to you this will open the local file and you can freely perform any changes to the DB file. When done (or when you simply want to push the changes) you can select the `Check-in` option. This will upload the changes to the server and prompt you whether you want to keep the file checked-out for further changes. If you want to discard your local changes select the `Undo Check-out` option from the context menu. This will discard your changes and allow you to continue with the file from the server.
+
+![CollaRE](./images/checkout.gif)
 
 ## Disclaimer
 
