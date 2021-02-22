@@ -38,13 +38,13 @@ class ProjectTree(QTreeWidget):
         event.accept()
         item = self.itemAt(event.pos())
         if item and item != self.previousHighlight: # Not none
-            if item.icon(0).name() == "application-x-executable":
+            if item.whatsThis(0) == "binary":
                 # Highlight parent folder
                 item.parent().setSelected(True)
                 if self.previousHighlight and self.previousHighlight != item.parent():
                     self.previousHighlight.setSelected(False)
                 self.previousHighlight = item.parent()
-            elif item.icon(0).name() == "folder":
+            elif item.whatsThis(0) == "folder":
                 # Highlight current folder
                 item.setSelected(True)
                 if self.previousHighlight:
@@ -132,10 +132,10 @@ class ProjectTree(QTreeWidget):
                 item = self.itemAt(event.pos())
                 if item:
                     # Adjust target of the drop event based on where we are
-                    if item.icon(0).name() != "folder":
-                        if item.parent().icon(0).name() == "folder":
+                    if item.whatsThis(0) != "folder":
+                        if item.parent().whatsThis(0) == "folder":
                             item = item.parent()
-                        elif item.parent().icon(0).name() == "application-x-executable":
+                        elif item.parent().whatsThis(0) == "binary":
                             item = item.parent().parent()
                         else:
                             item = item.parent().parent().parent()
@@ -303,14 +303,14 @@ class Ui_Dialog(object):
         self.menu = QtWidgets.QMenu(self.projectTreeView)
         item = self.projectTreeView.itemAt(event)
         self.menu.addSection("Project")
-        refresh = self.menu.addAction(QIcon.fromTheme("browser-reload"),"Refresh") # TODO ugly icon
-        if item.icon(0).name() == "folder":
+        refresh = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","refresh.png")),"Refresh")
+        if item.whatsThis(0) == "folder":
             # Right click on folder
             self.menu.addSection("Folder operations")
-            create_folder = self.menu.addAction(QIcon.fromTheme("folder-new"),"New Folder")
-            delete_folder = self.menu.addAction(QIcon.fromTheme("edit-delete"),"Delete Folder")
-            rename_folder = self.menu.addAction(QIcon.fromTheme("edit-select-all"),"Rename")
-        elif item.icon(0).name() == "application-x-executable":
+            create_folder = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","new_folder.png")),"New Folder")  
+            delete_folder = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete Folder")
+            rename_folder = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","rename.png")),"Rename")
+        elif item.whatsThis(0) == "binary":
             # Right click on original binary
             self.menu.addSection("Process in:")
             open_ida = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","i64.png")),"IDA Pro")
@@ -320,8 +320,8 @@ class Ui_Dialog(object):
             open_ghidra = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","ghdb.png")),"Ghidra")
             open_jeb = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","jdb2.png")),"JEB")
             self.menu.addSection("File operations")
-            push_all = self.menu.addAction(QIcon.fromTheme("go-top"),"Push Local DBs")
-            delete_file = self.menu.addAction(QIcon.fromTheme("edit-delete"),"Delete File")
+            push_all = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","upload.png")),"Push Local DBs")
+            delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
             for node in range(0,clickedItem.childCount()):
                 disabled_tool = clickedItem.child(node).text(0)
                 if "i64" in disabled_tool:
@@ -352,11 +352,11 @@ class Ui_Dialog(object):
         else:
             # Right click on one of the DB files
             self.menu.addSection("File operations")
-            open_file = self.menu.addAction(QIcon.fromTheme("document-open"),"Open File")
-            checkout = self.menu.addAction(QIcon.fromTheme("go-bottom"),"Check-out")
-            checkin = self.menu.addAction(QIcon.fromTheme("go-top"),"Check-in")
-            undo_checkout = self.menu.addAction(QIcon.fromTheme("edit-undo"),"Undo Check-out")
-            delete_file = self.menu.addAction(QIcon.fromTheme("edit-delete"),"Delete File")
+            open_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","open.png")),"Open File")
+            checkout = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","download.png")),"Check-out")
+            checkin = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","upload.png")),"Check-in")
+            undo_checkout = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","undo.png")),"Undo Check-out")
+            delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
             checked,current_user =  self.isCheckedOut(self.getPathToRoot(clickedItem))
             if checked:
                 checkout.setEnabled(False)
@@ -588,7 +588,7 @@ class Ui_Dialog(object):
     def openDoubleClickWrapper(self):
         # Double click on item, open only if parent is binary - i.e. we are clicking on db file
         selected_item = self.projectTreeView.selectedItems()
-        if selected_item[0].parent().icon(0).name() == "application-x-executable":
+        if selected_item[0].parent().whatsThis(0) == "binary":
             self.openDBFile(self.getPathToRoot(selected_item[0]))
 
     def openDBFile(self,path):
@@ -620,7 +620,7 @@ class Ui_Dialog(object):
             Popen([f"Hopper -d '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
             # TODO Cutter actually cant open rzdb files at the moment
-            Popen([f"cd {destination} && Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"cd {destination} && Cutter -p '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
@@ -658,7 +658,7 @@ class Ui_Dialog(object):
             Popen([f"Hopper -d '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
             # TODO Cutter actually cant open rzdb files at the moment
-            Popen([f"cd {destination} && Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"cd {destination} && Cutter -p '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
@@ -854,17 +854,22 @@ class Ui_Dialog(object):
                                 #child.setText(1, (f"(checked-out by '{val['__locked__']}')"))
                             else:
                                 node_name = key
-                            child.setIcon(0,QtGui.QIcon.fromTheme("application-x-executable"))
+                            icon = QIcon(os.path.join(current_running_file_dir,"icons","binary.png"))
+                            child.setIcon(0,icon)
+                            child.setWhatsThis(0,"binary")
                             for rev_db in val["__rev_dbs__"]:
                                 rev_db_node = QTreeWidgetItem()
                                 rev_db_node.setText(0,rev_db)
                                 if val["__rev_dbs__"][rev_db]:
                                     rev_db_node.setText(1, (f"Checked-out by '{val['__rev_dbs__'][rev_db]}'"))
                                 rev_db_node.setIcon(0,QtGui.QIcon(os.path.join(current_running_file_dir,"icons",f"{rev_db}.png")))
+                                rev_db_node.setWhatsThis(0,"db")
                                 child.addChild(rev_db_node)
                         elif val["__file__type__"] == False:
                             node_name = key
-                            child.setIcon(0,QtGui.QIcon.fromTheme("folder"))
+                            icon = QIcon(os.path.join(current_running_file_dir,"icons","folder.png"))
+                            child.setIcon(0,icon)
+                            child.setWhatsThis(0,"folder")
                             item.setExpanded(True)
                         else:
                             node_name = key
