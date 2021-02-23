@@ -9,8 +9,6 @@ import os, requests, json, re, base64, shutil , sys
 
 # TODO: Verify IDA support
 # TODO: Test on Windows
-# TODO: Handle cert error
-# TODO: popen process hangs on windows
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -959,7 +957,11 @@ class Ui_Dialog(object):
             if not self.server or not self.username or not self.password or not self.cert:
                 self.showPopupBox("Cannot Initiate Connection","Please make sure that all fields are filled!",QMessageBox.Critical)
                 return
-            response = requests.get(f'{self.server}/ping', auth=(self.username, self.password), verify=self.cert)
+            try:
+                response = requests.get(f'{self.server}/ping', auth=(self.username, self.password), verify=self.cert)
+            except:
+                self.showPopupBox("Cannot Initiate Connection","Connection not successful! Check provided data and try again!",QMessageBox.Critical)
+                return
             if response.text == "SUCCESS":
                 self.onSuccessConnect()
                 self.storeConnectionDetails(self.server,self.username,self.cert)
