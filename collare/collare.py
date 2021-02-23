@@ -9,9 +9,8 @@ import os, requests, json, re, base64, shutil , sys
 
 # TODO: Verify IDA support
 # TODO: Test on Windows
-# TODO: Test with actual multiple people
 # TODO: Handle cert error
-# TODO: gray-out dbs without local tools
+# TODO: popen process hangs on windows
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -189,6 +188,9 @@ class Ui_Dialog(object):
                 exe_file = os.path.join(path, f"{program}.exe")
                 if is_exe(exe_file):
                     return exe_file
+                exe_file = os.path.join(path, f"{program}.bat")
+                if is_exe(exe_file):
+                    return exe_file
 
         return None
 
@@ -283,7 +285,6 @@ class Ui_Dialog(object):
         elif tool == "hopper":
             Popen([f"Hopper" ,"-e",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "cutter":
-            # TODO handel Cutter
             Popen([f"Cutter",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif tool == "ida":
             Popen([f"ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
@@ -311,76 +312,77 @@ class Ui_Dialog(object):
         clickedItem = self.projectTreeView.itemAt(event)
         self.menu = QtWidgets.QMenu(self.projectTreeView)
         item = self.projectTreeView.itemAt(event)
-        self.menu.addSection("Project")
-        refresh = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","refresh.png")),"Refresh")
-        if item.whatsThis(0) == "folder":
-            # Right click on folder
-            self.menu.addSection("Folder operations")
-            create_folder = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","new_folder.png")),"New Folder")  
-            delete_folder = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete Folder")
-            rename_folder = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","rename.png")),"Rename")
-        elif item.whatsThis(0) == "binary":
-            # Right click on original binary
-            self.menu.addSection("Process in:")
-            open_ida = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","i64.png")),"IDA Pro")
-            open_rizin = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","rzdb.png")),"Cutter")
-            open_binja = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","bndb.png")),"Binary Ninja")
-            open_hop = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","hop.png")),"Hopper Disassembler")
-            open_ghidra = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","ghdb.png")),"Ghidra")
-            open_jeb = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","jdb2.png")),"JEB")
-            self.menu.addSection("File operations")
-            push_all = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","upload.png")),"Push Local DBs")
-            delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
-            for node in range(0,clickedItem.childCount()):
-                disabled_tool = clickedItem.child(node).text(0)
-                if "i64" in disabled_tool:
+        if item:
+            self.menu.addSection("Project")
+            refresh = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","refresh.png")),"Refresh")
+            if item.whatsThis(0) == "folder":
+                # Right click on folder
+                self.menu.addSection("Folder operations")
+                create_folder = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","new_folder.png")),"New Folder")  
+                delete_folder = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete Folder")
+                rename_folder = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","rename.png")),"Rename")
+            elif item.whatsThis(0) == "binary":
+                # Right click on original binary
+                self.menu.addSection("Process in:")
+                open_ida = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","i64.png")),"IDA Pro")
+                open_rizin = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","rzdb.png")),"Cutter")
+                open_binja = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","bndb.png")),"Binary Ninja")
+                open_hop = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","hop.png")),"Hopper Disassembler")
+                open_ghidra = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","ghdb.png")),"Ghidra")
+                open_jeb = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","jdb2.png")),"JEB")
+                self.menu.addSection("File operations")
+                push_all = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","upload.png")),"Push Local DBs")
+                delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
+                for node in range(0,clickedItem.childCount()):
+                    disabled_tool = clickedItem.child(node).text(0)
+                    if "i64" in disabled_tool:
+                        open_ida.setEnabled(False)
+                    if "bndb" in disabled_tool:
+                        open_binja.setEnabled(False)
+                    if "hop" in disabled_tool:
+                        open_hop.setEnabled(False)
+                    if "rzdb" in disabled_tool:
+                        open_rizin.setEnabled(False)
+                    if "ghdb" in disabled_tool:
+                        open_ghidra.setEnabled(False)
+                    if "jdb2" in disabled_tool:
+                        open_jeb.setEnabled(False)
+                # Enable/Disable tools based on PATH
+                if not self.which("ida64"):
                     open_ida.setEnabled(False)
-                if "bndb" in disabled_tool:
+                if not self.which("binaryninja"):
                     open_binja.setEnabled(False)
-                if "hop" in disabled_tool:
+                if not self.which("Hopper"):
                     open_hop.setEnabled(False)
-                if "rzdb" in disabled_tool:
+                if not self.which("Cutter"):
                     open_rizin.setEnabled(False)
-                if "ghdb" in disabled_tool:
+                if not self.which("ghidraRun"):
                     open_ghidra.setEnabled(False)
-                if "jdb2" in disabled_tool:
+                if not self.which("jeb"):
                     open_jeb.setEnabled(False)
-            # Enable/Disable tools based on PATH
-            if not self.which("ida64"):
-                open_ida.setEnabled(False)
-            if not self.which("binaryninja"):
-                open_binja.setEnabled(False)
-            if not self.which("Hopper"):
-                open_hop.setEnabled(False)
-            if not self.which("Cutter"):
-                open_rizin.setEnabled(False)
-            if not self.which("ghidraRun"):
-                open_ghidra.setEnabled(False)
-            if not self.which("jeb"):
-                open_jeb.setEnabled(False)
-        else:
-            # Right click on one of the DB files
-            self.menu.addSection("File operations")
-            open_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","open.png")),"Open File")
-            checkout = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","download.png")),"Check-out")
-            checkin = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","upload.png")),"Check-in")
-            undo_checkout = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","undo.png")),"Undo Check-out")
-            delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
-            checked,current_user =  self.isCheckedOut(self.getPathToRoot(clickedItem))
-            if checked:
-                checkout.setEnabled(False)
-                if not current_user:
+            else:
+                # Right click on one of the DB files
+                self.menu.addSection("File operations")
+                open_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","open.png")),"Open File")
+                checkout = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","download.png")),"Check-out")
+                checkin = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","upload.png")),"Check-in")
+                undo_checkout = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","undo.png")),"Undo Check-out")
+                delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
+                checked,current_user =  self.isCheckedOut(self.getPathToRoot(clickedItem))
+                if checked:
+                    checkout.setEnabled(False)
+                    if not current_user:
+                        checkin.setEnabled(False)
+                        undo_checkout.setEnabled(False)
+                        delete_file.setEnabled(False)
+                else:
                     checkin.setEnabled(False)
                     undo_checkout.setEnabled(False)
-                    delete_file.setEnabled(False)
-            else:
-                checkin.setEnabled(False)
-                undo_checkout.setEnabled(False)
-            if clickedItem.isDisabled():
-                open_file.setEnabled(False)
-                checkout.setEnabled(False)
-                checkin.setEnabled(False)
-                undo_checkout.setEnabled(False)
+                if clickedItem.isDisabled():
+                    open_file.setEnabled(False)
+                    checkout.setEnabled(False)
+                    checkin.setEnabled(False)
+                    undo_checkout.setEnabled(False)
         
         performed_action = self.menu.exec_(self.projectTreeView.mapToGlobal(event))
         # Handle actions below
@@ -639,6 +641,8 @@ class Ui_Dialog(object):
         elif path[-1] == "i64":
             Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
+            print(file_path)
+            # TODO has to be jeb.bat for windows
             Popen([f'jeb',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "ghdb":
             shutil.unpack_archive(file_path, destination, "zip")  
