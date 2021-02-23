@@ -10,6 +10,8 @@ import os, requests, json, re, base64, shutil , sys
 # TODO: Verify IDA support
 # TODO: Test on Windows
 # TODO: Test with actual multiple people
+# TODO: Handle cert error
+# TODO: gray-out dbs without local tools
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -69,7 +71,7 @@ class ProjectTree(QTreeWidget):
 
     def uploadFile(self,fsPath,remotePath):
         with open(fsPath, "rb") as data_file:
-            encoded_file = base64.b64encode(data_file.read())
+            encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
         values = {'path': remotePath,"project":self.projectName,"file":encoded_file,"file_name":os.path.basename(fsPath)}
         response = requests.post(f'{self.server}/push', json=values, auth=(self.username, self.password), verify=self.cert)
         if response.status_code != 200:
@@ -128,7 +130,10 @@ class ProjectTree(QTreeWidget):
         if event.mimeData().hasUrls:
             for url in event.mimeData().urls():
                 # Folders currently not supported
-                
+                if os.name == 'nt':
+                    url_path = url.path()[1:]
+                else:
+                    url_path = url.path()
                 item = self.itemAt(event.pos())
                 if item:
                     # Adjust target of the drop event based on where we are
@@ -140,10 +145,10 @@ class ProjectTree(QTreeWidget):
                         else:
                             item = item.parent().parent().parent()
                     # Upload file
-                    if Path(url.path()).is_dir():
-                        self.uploadDir(url.path(),self.getPathToRoot(item))
+                    if Path(url_path).is_dir():
+                        self.uploadDir(url_path,self.getPathToRoot(item))
                     else:
-                        self.uploadFile(url.path(),self.getPathToRoot(item))
+                        self.uploadFile(url_path,self.getPathToRoot(item))
 
 
 class Ui_Dialog(object):
@@ -179,6 +184,9 @@ class Ui_Dialog(object):
         else:
             for path in os.environ["PATH"].split(os.pathsep):
                 exe_file = os.path.join(path, program)
+                if is_exe(exe_file):
+                    return exe_file
+                exe_file = os.path.join(path, f"{program}.exe")
                 if is_exe(exe_file):
                     return exe_file
 
@@ -271,15 +279,16 @@ class Ui_Dialog(object):
         with open(file_path,"wb") as dest_file:
             dest_file.write(base64.b64decode(response_data['file']))
         if tool == "binja":
-            Popen([f"binaryninja '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"binaryninja",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "hopper":
-            Popen([f"Hopper -e '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"Hopper" ,"-e",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "cutter":
-            Popen([f"cd {destination} && Cutter '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            # TODO handel Cutter
+            Popen([f"Cutter",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif tool == "ida":
-            Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "jeb":
-            Popen([f"jeb '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"jeb",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "ghidra":
             gpr_path, ok = QInputDialog.getText(self, 'Import Ghidra Project', f"The file has been donwloaded to '{file_path}'.\nPlease create a ghidra project with name that matches the name of the file ({path[-1]}) and enter full path to the '{path[-1]}.gpr' file:")
             if ok:
@@ -367,7 +376,11 @@ class Ui_Dialog(object):
             else:
                 checkin.setEnabled(False)
                 undo_checkout.setEnabled(False)
-
+            if clickedItem.isDisabled():
+                open_file.setEnabled(False)
+                checkout.setEnabled(False)
+                checkin.setEnabled(False)
+                undo_checkout.setEnabled(False)
         
         performed_action = self.menu.exec_(self.projectTreeView.mapToGlobal(event))
         # Handle actions below
@@ -435,7 +448,7 @@ class Ui_Dialog(object):
             filename_extension = os.path.splitext(db_file)[1][1:]
             if db_file.startswith(filename_no_extension) and filename_extension in supported_db_names:
                 with open(os.path.join(containing_folder,db_file), "rb") as data_file:
-                    encoded_file = base64.b64encode(data_file.read())
+                    encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
                 if filename_extension == "hop" or filename_extension == "bndb":
                     # Hopper and binary ninja do strip the extension by default when saving projects so check if we need to put it back
                     if os.path.splitext(db_file)[0] != filename:
@@ -588,8 +601,9 @@ class Ui_Dialog(object):
     def openDoubleClickWrapper(self):
         # Double click on item, open only if parent is binary - i.e. we are clicking on db file
         selected_item = self.projectTreeView.selectedItems()
-        if selected_item[0].parent().whatsThis(0) == "binary":
-            self.openDBFile(self.getPathToRoot(selected_item[0]))
+        if selected_item:
+            if selected_item[0].parent().whatsThis(0) == "binary":
+                self.openDBFile(self.getPathToRoot(selected_item[0]))
 
     def openDBFile(self,path):
         # Opens db file based on the relevant tool
@@ -615,19 +629,20 @@ class Ui_Dialog(object):
         destination = os.path.join(str(collare_home),*path[:-1])
         file_path = os.path.join(destination,filename)
         if path[-1] == "bndb":
-            Popen([f"binaryninja '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            #Popen(f'binaryninja "{file_path}"'],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(['binaryninja',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "hop":
-            Popen([f"Hopper -d '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(['Hopper', '-d',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
             # TODO Cutter actually cant open rzdb files at the moment
-            Popen([f"cd {destination} && Cutter -p '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f'Cutter',"-p", file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "i64":
-            Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
-            Popen([f"jeb '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f'jeb',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "ghdb":
             shutil.unpack_archive(file_path, destination, "zip")  
-            Popen([f"ghidraRun '{os.path.join(destination,filename.replace('ghdb','gpr'))}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f'ghidraRun',os.path.join(destination,filename.replace("ghdb","gpr"))],stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
     
     def checkoutDBFile(self,path):
@@ -644,6 +659,7 @@ class Ui_Dialog(object):
             return
         elif response.text == "FILE_ALREADY_CHECKEDOUT":
             self.showPopupBox("Error During Check-Out","File already checked out!",QMessageBox.Critical)
+            self.refreshProject()
             return
         response_data = response.json()
         destination = os.path.join(str(collare_home),*path[:-1]) # Create folder for each file
@@ -653,19 +669,19 @@ class Ui_Dialog(object):
         with open(file_path,"wb") as dest_file:
             dest_file.write(base64.b64decode(response_data['file']))
         if path[-1] == "bndb":
-            Popen([f"binaryninja '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(["binaryninja", file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "hop":
-            Popen([f"Hopper -d '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(["Hopper", "-d",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
             # TODO Cutter actually cant open rzdb files at the moment
-            Popen([f"cd {destination} && Cutter -p '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(["Cutter","-p",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "i64":
-            Popen([f"ida64 '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(["ida64 ",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
-            Popen([f"jeb '{file_path}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(["jeb ",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "ghdb":
             shutil.unpack_archive(file_path, destination, "zip")  
-            Popen([f"ghidraRun '{os.path.join(destination,filename.replace('ghdb','gpr'))}'"], shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(["ghidraRun",os.path.join(destination,filename.replace('ghdb','gpr'))],stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
 
     def checkinDBFile(self,path):
@@ -683,7 +699,7 @@ class Ui_Dialog(object):
                 zipObj.write(gpr_path,os.path.basename(gpr_path))
                 self.addFolderToZip(zipObj,gpr_path.replace("gpr","rep"),os.path.dirname(gpr_path))
         with open(os.path.join(containing_folder,filename), "rb") as data_file:
-            encoded_file = base64.b64encode(data_file.read())
+            encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
         values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename,"checkout":checkout}
         response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert)
         if response.status_code != 200:
@@ -839,6 +855,23 @@ class Ui_Dialog(object):
             self.populateAllUserListings()
             self.populateCurrentProjectUserListing()
 
+    def doesToolExist(self,tool):
+        if tool == "i64" and self.which("ida64"):
+            return True
+        if tool == "bndb" and self.which("binaryninja"):
+            return True
+        if tool == "hop" and self.which("Hopper"):
+            return True
+        if tool == "rzdb" and self.which("Cutter"):
+            return True
+        if tool == "ghdb" and self.which("ghidraRun"):
+            return True
+        if tool == "jdb2" and self.which("jeb"):
+            return True
+        return False
+
+
+
     def refreshProjectTree(self):
         self.projectTreeView.clear()
         def fill_item(item,value):
@@ -862,6 +895,8 @@ class Ui_Dialog(object):
                                 rev_db_node.setText(0,rev_db)
                                 if val["__rev_dbs__"][rev_db]:
                                     rev_db_node.setText(1, (f"Checked-out by '{val['__rev_dbs__'][rev_db]}'"))
+                                if not self.doesToolExist(rev_db):
+                                    rev_db_node.setDisabled(True)
                                 rev_db_node.setIcon(0,QtGui.QIcon(os.path.join(current_running_file_dir,"icons",f"{rev_db}.png")))
                                 rev_db_node.setWhatsThis(0,"db")
                                 child.addChild(rev_db_node)
