@@ -289,10 +289,19 @@ class Ui_Dialog(object):
         elif tool == "ida":
             Popen([f"ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "jeb":
-            Popen([f"jeb",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            if os.name == "nt":
+                jeb = "jeb.bat"
+            else:
+                jeb = "jeb"
+            Popen([jeb,file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "ghidra":
-            gpr_path, ok = QInputDialog.getText(self, 'Import Ghidra Project', f"The file has been donwloaded to '{file_path}'.\nPlease create a ghidra project with name that matches the name of the file ({path[-1]}) and enter full path to the '{path[-1]}.gpr' file:")
+            gpr_path, ok = QInputDialog.getText(self, 'Import Ghidra Project', f"The file has been downloaded to '{file_path}'.\nPlease create a Ghidra project with name that matches the name of the file ({path[-1]}) and enter full path to the '{path[-1]}.gpr' file:")
             if ok:
+                # Change project owner:
+                with open(os.path.join(gpr_path.replace(".gpr",".rep"),"project.prp"),"r") as project_prp:
+                    project_prp_data = project_prp.read()
+                with open(os.path.join(gpr_path.replace(".gpr",".rep"),"project.prp"),"w") as project_prp:
+                    project_prp.write(re.sub(r'<STATE NAME=\"OWNER.*>',"", project_prp_data))
                 with ZipFile(os.path.join(destination,path[-1]+".ghdb"), 'w') as zipObj:
                     zipObj.write(gpr_path,os.path.basename(gpr_path))
                     self.addFolderToZip(zipObj,gpr_path.replace(".gpr",".rep"),os.path.dirname(gpr_path))
@@ -642,11 +651,19 @@ class Ui_Dialog(object):
             Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
             print(file_path)
-            # TODO has to be jeb.bat for windows
-            Popen([f'jeb',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            # has to be jeb.bat for windows
+            if os.name == "nt":
+                jeb = "jeb.bat"
+            else:
+                jeb = "jeb"
+            Popen([jeb,file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "ghdb":
+            if os.name == "nt":
+                ghidraRun = "ghidraRun.bat"
+            else:
+                ghidraRun = "ghidraRun"
             shutil.unpack_archive(file_path, destination, "zip")  
-            Popen([f'ghidraRun',os.path.join(destination,filename.replace("ghdb","gpr"))],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([ghidraRun,os.path.join(destination,filename.replace("ghdb","gpr")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
     
     def checkoutDBFile(self,path):
@@ -680,12 +697,20 @@ class Ui_Dialog(object):
             # TODO Cutter actually cant open rzdb files at the moment
             Popen(["Cutter","-p",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "i64":
-            Popen(["ida64 ",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(["ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
-            Popen(["jeb ",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            if os.name == "nt":
+                jeb = "jeb.bat"
+            else:
+                jeb = "jeb"
+            Popen([jeb,file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "ghdb":
+            if os.name == "nt":
+                ghidraRun = "ghidraRun.bat"
+            else:
+                ghidraRun = "ghidraRun"
             shutil.unpack_archive(file_path, destination, "zip")  
-            Popen(["ghidraRun",os.path.join(destination,filename.replace('ghdb','gpr'))],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([ghidraRun,os.path.join(destination,filename.replace('ghdb','gpr')).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
 
     def checkinDBFile(self,path):

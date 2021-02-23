@@ -29,7 +29,7 @@ Hopper is removing file extensions by default, however the tool accounts for thi
 
 ### JEB
 
-To enable support for this tool add a file `jeb` to your path (when you open `cmd`/`terminal` writing `jeb` should start the application).
+To enable support for this tool add a file `jeb` to your path (when you open `cmd`/`terminal` writing `jeb` should start the application). This can be done by renaming the default runner script file for your OS to `jeb` (for Windows this would actually be `jeb.bat`).
 
 ### IDA Pro
 
