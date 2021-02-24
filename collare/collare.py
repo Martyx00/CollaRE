@@ -1,14 +1,16 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QStandardItemModel, QIcon
-from PyQt5.QtWidgets import QMessageBox, QTreeWidgetItem, QFileIconProvider,QTreeWidget, QInputDialog, QHBoxLayout, QFrame, QApplication
+from PyQt5.QtWidgets import QMessageBox, QDialog,QTreeWidgetItem, QFileIconProvider,QTreeWidget, QInputDialog, QHBoxLayout, QFrame, QApplication
 from pathlib import Path
-from subprocess import Popen
+from subprocess import Popen, PIPE
 from functools import reduce
 from zipfile import ZipFile
 import os, requests, json, re, base64, shutil , sys
 
 # TODO: Verify IDA support
 # TODO: Test on Windows
+# TODO: deleteing files error handling
+# TODO: progress bar
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -170,6 +172,20 @@ class Ui_Dialog(object):
         msg.setIcon(icon)
         x = msg.exec_()
     
+    def showProgressBox(self,title,text):
+        msg = QDialog(self)
+        msg.setWindowTitle(title)
+        msg.setLayout(QHBoxLayout())
+        label = QtWidgets.QLabel(title)
+        label.setStyleSheet("background-color: white")
+        label.raise_()
+        msg.layout().addWidget(label)
+        #msg.setStyleSheet("color: white")
+        #msg.setText(text)
+        #msg.setStandardButtons(QMessageBox.NoButton)
+        msg.show()
+        return msg
+
     def which(self,program):
         # Search for programs in path
         def is_exe(fpath):
@@ -293,16 +309,39 @@ class Ui_Dialog(object):
                 jeb = "jeb"
             Popen([jeb,file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "ghidra":
-            gpr_path, ok = QInputDialog.getText(self, 'Import Ghidra Project', f"The file has been downloaded to '{file_path}'.\nPlease create a Ghidra project with name that matches the name of the file ({path[-1]}) and enter full path to the '{path[-1]}.gpr' file:")
-            if ok:
-                # Change project owner:
-                with open(os.path.join(gpr_path.replace(".gpr",".rep"),"project.prp"),"r") as project_prp:
+            progress = self.showProgressBox("Generating Ghidra Project","Automatic Ghidra project generation in progress ...")
+            progress.show()
+            if os.name == "nt":
+                headless = "analyzeHeadless.bat"
+            else:
+                headless = "analyzeHeadless"
+            process = Popen([headless, os.path.dirname(file_path.replace("\\","\\\\")),os.path.basename(file_path.replace("\\","\\\\")),'-import',file_path.replace("\\","\\\\")],stdout=PIPE, stderr=PIPE)
+            output, err = process.communicate()
+            progress.close()
+            if b"ERROR REPORT" not in output:
+                # Success
+                with open(os.path.join(file_path+".rep","project.prp"),"r") as project_prp:
                     project_prp_data = project_prp.read()
-                with open(os.path.join(gpr_path.replace(".gpr",".rep"),"project.prp"),"w") as project_prp:
+                with open(os.path.join(file_path+".rep","project.prp"),"w") as project_prp:
                     project_prp.write(re.sub(r'<STATE NAME=\"OWNER.*>',"", project_prp_data))
-                with ZipFile(os.path.join(destination,path[-1]+".ghdb"), 'w') as zipObj:
-                    zipObj.write(gpr_path,os.path.basename(gpr_path))
-                    self.addFolderToZip(zipObj,gpr_path.replace(".gpr",".rep"),os.path.dirname(gpr_path))
+                with ZipFile(os.path.join(file_path+".ghdb"), 'w') as zipObj:
+                    zipObj.write(file_path+".gpr",os.path.basename(file_path+".gpr"))
+                    self.addFolderToZip(zipObj,file_path + ".rep",os.path.dirname(file_path))
+                self.showPopupBox("Ghidra Project Created","Automatic project creation was successful!\nPush local databases.",QMessageBox.Information)
+            else:
+                gpr_path, ok = QInputDialog.getText(self, 'Import Ghidra Project', f"Automatic project creation failed!\nThe file has been downloaded to '{file_path}'.\nPlease create a Ghidra project with name that matches the name of the file ({path[-1]}) and enter full path to the '{path[-1]}.gpr' file:")
+                if ok:
+                    if os.path.exists(gpr_path):
+                        # Change project owner:
+                        with open(os.path.join(gpr_path.replace(".gpr",".rep"),"project.prp"),"r") as project_prp:
+                            project_prp_data = project_prp.read()
+                        with open(os.path.join(gpr_path.replace(".gpr",".rep"),"project.prp"),"w") as project_prp:
+                            project_prp.write(re.sub(r'<STATE NAME=\"OWNER.*>',"", project_prp_data))
+                        with ZipFile(os.path.join(destination,path[-1]+".ghdb"), 'w') as zipObj:
+                            zipObj.write(gpr_path,os.path.basename(gpr_path))
+                            self.addFolderToZip(zipObj,gpr_path.replace(".gpr",".rep"),os.path.dirname(gpr_path))
+                    else:
+                        self.showPopupBox("Ghidra Project","Specified file does not exist!",QMessageBox.Critical)
 
 
     def isCheckedOut(self,path):
