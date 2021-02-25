@@ -8,8 +8,6 @@ from functools import reduce
 from zipfile import ZipFile
 import os, requests, json, re, base64, shutil, sys, time
 
-# TODO: Verify IDA support
-# TODO: Test on Windows
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -172,7 +170,7 @@ class Ui_Dialog(object):
         x = msg.exec_()
     
     def showProgressBox(self,title):
-        # TODO works so-so
+        # Ugly but at least something
         msg = QProgressDialog(self)
         msg.setWindowTitle(title)
         msg.setMinimum(0)
@@ -683,7 +681,6 @@ class Ui_Dialog(object):
         elif path[-1] == "hop":
             Popen(['Hopper', '-d',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
-            # TODO Cutter actually cant open rzdb files at the moment
             Popen([f'Cutter',"-p", file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "i64":
             Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
@@ -732,7 +729,6 @@ class Ui_Dialog(object):
         elif path[-1] == "hop":
             Popen(["Hopper", "-d",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
-            # TODO Cutter actually cant open rzdb files at the moment
             Popen(["Cutter","-p",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "i64":
             Popen(["ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)

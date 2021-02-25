@@ -15,7 +15,6 @@ The [back-end](https://github.com/Martyx00/CollaREServer) of the tool is a simpl
 
 To enable support for this tool add a file `Cutter` to your path (when you open `cmd`/`terminal` writing `Cutter` should start the application). 
 When saving Cutter (rizin) projects you have to manually append `.rzdb`. Do not remove the extension that the file already has (`exe` or `so` for example).
-TODO https://github.com/rizinorg/cutter/pull/2606
 
 ### Binary Ninja
 
@@ -37,8 +36,8 @@ To enable support for this tool add a file `ida64` to your path (when you open `
 
 ### Ghidra
 
-To enable support for this tool add a file `ghidraRun` to your path (when you open `cmd`/`terminal` writing `ghidraRun` should start the application).
-The process of initializing the database with Ghidra is a bit more complicated as there is no way that Ghidra will process file [without creating a project](https://github.com/NationalSecurityAgency/ghidra/issues/629). So to be able to push the Ghidra database (referred to as `ghdb`) you will be prompted to create a project manually and then specify the path to the `gpr` file (sorry for that).
+To enable support for this tool add a file `ghidraRun` and `analyzeHeadless` (`.bat` for Windows) to your path (when you open `cmd`/`terminal` writing `ghidraRun` should start the application). Note that `analyzeHeadless` is in `support` folder in the Ghidra root directory so make sure to adjust PATH to accommodate both files.
+The process of initializing the database with Ghidra is a bit more complicated as there is no way that Ghidra will process file [without creating a project](https://github.com/NationalSecurityAgency/ghidra/issues/629). So to be able to push the Ghidra database (referred to as `ghdb`) you will be prompted to create a project manually whenever automatic processing fails (basically whenever the file you process is not ELF/PE) and then specify the path to the `gpr` file (sorry for that).
 
 ## Usage
 
