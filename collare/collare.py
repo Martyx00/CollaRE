@@ -1,16 +1,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QStandardItemModel, QIcon
-from PyQt5.QtWidgets import QMessageBox, QDialog,QTreeWidgetItem, QFileIconProvider,QTreeWidget, QInputDialog, QHBoxLayout, QFrame, QApplication
+from PyQt5.QtGui import QStandardItemModel, QIcon, QFontMetrics
+from PyQt5.QtCore import QTimer, QEventLoop
+from PyQt5.QtWidgets import QMessageBox, QProgressDialog,QTreeWidgetItem, QFileIconProvider,QTreeWidget, QInputDialog, QHBoxLayout, QFrame, QApplication
 from pathlib import Path
 from subprocess import Popen, PIPE
 from functools import reduce
 from zipfile import ZipFile
-import os, requests, json, re, base64, shutil , sys
+import os, requests, json, re, base64, shutil, sys, time
 
 # TODO: Verify IDA support
 # TODO: Test on Windows
-# TODO: deleteing files error handling
-# TODO: progress bar
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -172,18 +171,21 @@ class Ui_Dialog(object):
         msg.setIcon(icon)
         x = msg.exec_()
     
-    def showProgressBox(self,title,text):
-        msg = QDialog(self)
+    def showProgressBox(self,title):
+        # TODO works so-so
+        msg = QProgressDialog(self)
         msg.setWindowTitle(title)
-        msg.setLayout(QHBoxLayout())
-        label = QtWidgets.QLabel(title)
-        label.setStyleSheet("background-color: white")
-        label.raise_()
-        msg.layout().addWidget(label)
-        #msg.setStyleSheet("color: white")
-        #msg.setText(text)
-        #msg.setStandardButtons(QMessageBox.NoButton)
+        msg.setMinimum(0)
+        msg.setMaximum(0)
+        msg.setValue(0)
+        msg.setCancelButton(None)
+        width = QFontMetrics(self.font()).width(title) + 100
+        msg.resize(width, msg.height())
+
         msg.show()
+        loop = QEventLoop()
+        QTimer.singleShot(1000, loop.quit)
+        loop.exec_()
         return msg
 
     def which(self,program):
@@ -309,8 +311,7 @@ class Ui_Dialog(object):
                 jeb = "jeb"
             Popen([jeb,file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "ghidra":
-            progress = self.showProgressBox("Generating Ghidra Project","Automatic Ghidra project generation in progress ...")
-            progress.show()
+            progress = self.showProgressBox("Generating Ghidra Project")
             if os.name == "nt":
                 headless = "analyzeHeadless.bat"
             else:
@@ -794,8 +795,9 @@ class Ui_Dialog(object):
             if response.text == "DONE":
                 if path[-1] in supported_db_names:
                     remove_path = os.path.join(str(collare_home),*path[:-1],path[-2]) + f".{path[-1]}"
-                    os.remove(remove_path)
-                else:
+                    if os.path.exists(remove_path):
+                        os.remove(remove_path)
+                elif os.path.exists(os.path.join(str(collare_home),*path)):
                     shutil.rmtree(os.path.join(str(collare_home),*path))
             elif response.text == "CHECKEDOUT_FILE":
                 self.showPopupBox("Error Deleting Folder","This file is currently checked-out!",QMessageBox.Critical)
