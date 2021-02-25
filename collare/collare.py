@@ -662,7 +662,7 @@ class Ui_Dialog(object):
         }
         response = requests.post(f'{self.server}/opendbfile', json=data, auth=(self.username, self.password), verify=self.cert)
         if response.status_code != 200:
-            self.showPopupBox("Error During Check-Out","Something went horribly wrong!",QMessageBox.Critical)
+            self.showPopupBox("Error Opening File","Something went horribly wrong!",QMessageBox.Critical)
             return
         elif response.text != "FILE_ALREADY_CHECKEDOUT":
             self.showPopupBox("Opening File without Check-Out","Please consider the file to be open in 'read-only' mode. Re-opening the file or performing checkout will overwrite any changes made. Make sure to do 'Check-out' if you want to do some changes!",QMessageBox.Information)
@@ -673,6 +673,11 @@ class Ui_Dialog(object):
             file_path = os.path.join(destination,filename)
             with open(file_path,"wb") as dest_file:
                 dest_file.write(base64.b64decode(response_data['file']))
+            if path[-1] == "ghdb":
+                destination = os.path.join(str(collare_home),*path[:-1])
+                file_path = os.path.join(destination,filename)
+                shutil.rmtree(file_path[:-4] + "rep")
+                shutil.unpack_archive(file_path, destination, "zip")  
         destination = os.path.join(str(collare_home),*path[:-1])
         file_path = os.path.join(destination,filename)
         if path[-1] == "bndb":
@@ -697,7 +702,6 @@ class Ui_Dialog(object):
                 ghidraRun = "ghidraRun.bat"
             else:
                 ghidraRun = "ghidraRun"
-            shutil.unpack_archive(file_path, destination, "zip")  
             Popen([ghidraRun,os.path.join(destination,filename.replace("ghdb","gpr")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
     
@@ -743,6 +747,7 @@ class Ui_Dialog(object):
                 ghidraRun = "ghidraRun.bat"
             else:
                 ghidraRun = "ghidraRun"
+            shutil.rmtree(file_path[:-4] + "rep")
             shutil.unpack_archive(file_path, destination, "zip")  
             Popen([ghidraRun,os.path.join(destination,filename.replace('ghdb','gpr')).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
