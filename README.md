@@ -1,5 +1,5 @@
 
-# CollaRE
+# CollaRE v0.1
 
 ![CollaRE](./collare/icons/collare-full-white.png)
 
@@ -8,6 +8,22 @@
 
 CollareRE is a tool for collaborative reverse engineering that aims to allow teams that do need to use more then one tool during a project to collaborate without the need to share the files on a separate locations. It also contains a very simple user management and as such can be used for a multi-project servers where different teams work on different projects.
 The [back-end](https://github.com/Martyx00/CollaREServer) of the tool is a simple `Flask app` with `nginx` in front of it running in Docker that works with files and JSON based manifests that hold the relevant data. The front-end is a PyQT based GUI tool with a simple interface that allows managing the projects and working with the binary files and their corresponding reverse engineering databases. As of now the tool supports `Binary Ninja`, `Cutter (Rizin)`, `Ghidra`, `Hopper Dissassembler`, `IDA` and `JEB`. The implementation is abstracted from the inner workings of these tools as much as possible to avoid issues with any API changes and thus does not integrate directly into those tools in form of a plugin (might change in the future). The work is based purely on managing the files produced by these tools (literally just based on the well known file extensions) and a simple SVN style `check-out` and `check-in` operations.
+
+## Installation
+
+Download/clone this repository and run `sudo python3 setup.py install`. On Linux this will install the tool to the `PATH` and you will be able to run it simply with `collare` command. On Windows this will put the file into the `C:\Users\<USERNAME>\AppData\Local\Programs\Python\<PYTHON_VERSION>\Scripts\collare.exe` (depending on how you installed Python).
+
+For Gnome based desktop UIs you can use following desktop file (paths to files may vary):
+```
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=CollaRE
+Exec=/usr/local/bin/collare
+Icon=/usr/local/lib/python3.8/dist-packages/collare-0.1-py3.8.egg/collare/icons/collare.png
+Terminal=false
+
+```
 
 ## Supported Tools
 
