@@ -413,6 +413,7 @@ class Ui_Dialog(object):
                 checkin = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","upload.png")),"Check-in")
                 undo_checkout = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","undo.png")),"Undo Check-out")
                 delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
+                
                 checked,current_user =  self.isCheckedOut(self.getPathToRoot(clickedItem))
                 # TODO submenu for version specific checkout and open
                 manifestPath = self.getPathToRoot(clickedItem)[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(clickedItem)[-1]]
@@ -432,6 +433,7 @@ class Ui_Dialog(object):
                     openAction = QtWidgets.QAction(f"#{counter}: {version}")
                     openAction.setWhatsThis("open_version")
                     openSubmenu.addAction(openAction)
+                    counter += 1
                 
                 # TODO end submenu
                 if checked:
@@ -477,13 +479,19 @@ class Ui_Dialog(object):
             elif performed_action.text() == "Push Local DBs":
                 self.pushLocal(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Check-out":
-                self.checkoutDBFile(self.getPathToRoot(clickedItem))
+                # TODO verify
+                manifestPath = self.getPathToRoot(clickedItem)[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(clickedItem)[-1]]
+                version = reduce(dict.get,manifestPath,self.currentProjectManifest)["latest"]
+                self.checkoutDBFile(self.getPathToRoot(clickedItem),version)
             elif performed_action.text() == "Check-in":
                 self.checkinDBFile(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Undo Check-out":
                 self.undoCheckoutDBFile(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Open File":
-                self.openDBFile(self.getPathToRoot(clickedItem))
+                # TODO verify
+                manifestPath = self.getPathToRoot(clickedItem)[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(clickedItem)[-1]]
+                version = reduce(dict.get,manifestPath,self.currentProjectManifest)["latest"]
+                self.openDBFile(self.getPathToRoot(clickedItem),version)
             elif performed_action.text() == "Refresh":
                 self.refreshProject()
             elif performed_action.text() == "Rename":
@@ -679,15 +687,19 @@ class Ui_Dialog(object):
         selected_item = self.projectTreeView.selectedItems()
         if selected_item:
             if selected_item[0].parent().whatsThis(0) == "binary":
-                self.openDBFile(self.getPathToRoot(selected_item[0]))
+                # TODO get version
+                manifestPath = self.getPathToRoot(selected_item[0])[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(selected_item[0])[-1]]
+                version = reduce(dict.get,manifestPath,self.currentProjectManifest)["latest"]
+                self.openDBFile(self.getPathToRoot(selected_item[0]),version)
 
-    def openDBFile(self,path):
+    def openDBFile(self,path,version):
         # Opens db file based on the relevant tool
         filename = f"{path[-2]}.{path[-1]}"
         data = {
             "project": self.currentProject,
             "path": path[:-1],
-            "file_name": filename
+            "file_name": filename,
+            "version": version
         }
         response = requests.post(f'{self.server}/opendbfile', json=data, auth=(self.username, self.password), verify=self.cert)
         if response.status_code != 200:
@@ -734,13 +746,14 @@ class Ui_Dialog(object):
             Popen([ghidraRun,os.path.join(destination,filename.replace("ghdb","gpr")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
     
-    def checkoutDBFile(self,path):
+    def checkoutDBFile(self,path,version):
         # Checks-out the DB file for editing
         filename = f"{path[-2]}.{path[-1]}"
         data = {
             "project": self.currentProject,
             "path": path[:-1],
-            "file_name": filename
+            "file_name": filename,
+            "version": version
         }
         response = requests.post(f'{self.server}/checkout', json=data, auth=(self.username, self.password), verify=self.cert)
         if response.status_code != 200:
@@ -782,28 +795,31 @@ class Ui_Dialog(object):
         self.refreshProject()
 
     def checkinDBFile(self,path):
-        # Performs check-in of the chcked-out file, this is the only way to update DB files on the server
+        # Performs check-in of the checked-out file, this is the only way to update DB files on the server
+        # TODO comment
         checkout = False
         questionBox = QMessageBox()
         answer = questionBox.question(self,"Check-in", f"Would you like to keep the file checked-out?", questionBox.Yes | questionBox.No)
         if answer == questionBox.Yes:
             checkout = True
-        containing_folder = os.path.join(str(collare_home),*path[:-1]) # Sperate folder for files
-        filename = f"{path[-2]}.{path[-1]}"
-        if path[-1] == "ghdb":
-            gpr_path = os.path.join(containing_folder,path[-2] + ".gpr")
-            with ZipFile(os.path.join(containing_folder,filename), 'w') as zipObj:
-                zipObj.write(gpr_path,os.path.basename(gpr_path))
-                self.addFolderToZip(zipObj,gpr_path.replace("gpr","rep"),os.path.dirname(gpr_path))
-        with open(os.path.join(containing_folder,filename), "rb") as data_file:
-            encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
-        values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename,"checkout":checkout}
-        response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert)
-        if response.status_code != 200:
-            self.showPopupBox("Error During Check-In","Something went horribly wrong!",QMessageBox.Critical)
-        elif response.text == "FILE_NOT_CHECKEDOUT":
-            self.showPopupBox("Error During Check-In","File is not checked-out to you!",QMessageBox.Critical)
-        self.refreshProject()
+        comment, ok = QInputDialog.getText(self, 'Check-in Comment', f"Enter comment for the check-in:")
+        if ok:
+            containing_folder = os.path.join(str(collare_home),*path[:-1]) # Sperate folder for files
+            filename = f"{path[-2]}.{path[-1]}"
+            if path[-1] == "ghdb":
+                gpr_path = os.path.join(containing_folder,path[-2] + ".gpr")
+                with ZipFile(os.path.join(containing_folder,filename), 'w') as zipObj:
+                    zipObj.write(gpr_path,os.path.basename(gpr_path))
+                    self.addFolderToZip(zipObj,gpr_path.replace("gpr","rep"),os.path.dirname(gpr_path))
+            with open(os.path.join(containing_folder,filename), "rb") as data_file:
+                encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
+            values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename,"checkout":checkout,"comment":comment}
+            response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert)
+            if response.status_code != 200:
+                self.showPopupBox("Error During Check-In","Something went horribly wrong!",QMessageBox.Critical)
+            elif response.text == "FILE_NOT_CHECKEDOUT":
+                self.showPopupBox("Error During Check-In","File is not checked-out to you!",QMessageBox.Critical)
+            self.refreshProject()
 
     def deleteFile(self,path):
         # Removes any file from the server (and local) storage
