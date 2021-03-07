@@ -346,9 +346,9 @@ class Ui_Dialog(object):
     def isCheckedOut(self,path):
         # Verify if the file is currently checkedout
         checkout, current_user = False, False
-        if reduce(dict.get,path[:-1],self.currentProjectManifest)["__rev_dbs__"][path[-1]] != None:
+        if reduce(dict.get,path[:-1],self.currentProjectManifest)["__rev_dbs__"][path[-1]]["checked-out"] != None:
             checkout = True
-            if reduce(dict.get,path[:-1],self.currentProjectManifest)["__rev_dbs__"][path[-1]] == self.username:
+            if reduce(dict.get,path[:-1],self.currentProjectManifest)["__rev_dbs__"][path[-1]]["checked-out"] == self.username:
                 current_user = True
         return checkout,current_user
 
@@ -414,8 +414,29 @@ class Ui_Dialog(object):
                 undo_checkout = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","undo.png")),"Undo Check-out")
                 delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
                 checked,current_user =  self.isCheckedOut(self.getPathToRoot(clickedItem))
+                # TODO submenu for version specific checkout and open
+                manifestPath = self.getPathToRoot(clickedItem)[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(clickedItem)[-1]]
+                versions = reduce(dict.get,manifestPath,self.currentProjectManifest)["versions"]
+                self.menu.addSection("Previous File Versions")
+                openSubmenu = QtWidgets.QMenu(self.menu)
+                openSubmenu.setTitle("Open Previous Version")
+                openSubmenu.setIcon(QIcon(os.path.join(current_running_file_dir,"icons","open.png")))
+                checkoutSubmenu = QtWidgets.QMenu(self.menu)
+                checkoutSubmenu.setTitle("Check-out Previous Version")
+                checkoutSubmenu.setIcon(QIcon(os.path.join(current_running_file_dir,"icons","download.png")))
+                counter = 0
+                for version in versions:
+                    checkoutAction = QtWidgets.QAction(f"#{counter}: {version}")
+                    checkoutAction.setWhatsThis("checkout_version")
+                    checkoutSubmenu.addAction(checkoutAction)
+                    openAction = QtWidgets.QAction(f"#{counter}: {version}")
+                    openAction.setWhatsThis("open_version")
+                    openSubmenu.addAction(openAction)
+                
+                # TODO end submenu
                 if checked:
                     checkout.setEnabled(False)
+                    checkoutSubmenu.setEnabled(False)
                     if not current_user:
                         checkin.setEnabled(False)
                         undo_checkout.setEnabled(False)
@@ -426,8 +447,11 @@ class Ui_Dialog(object):
                 if clickedItem.isDisabled():
                     open_file.setEnabled(False)
                     checkout.setEnabled(False)
+                    checkoutSubmenu.setEnabled(False)
                     checkin.setEnabled(False)
                     undo_checkout.setEnabled(False)
+                self.menu.addMenu(openSubmenu)
+                self.menu.addMenu(checkoutSubmenu)
         
         performed_action = self.menu.exec_(self.projectTreeView.mapToGlobal(event))
         # Handle actions below
@@ -464,6 +488,11 @@ class Ui_Dialog(object):
                 self.refreshProject()
             elif performed_action.text() == "Rename":
                 self.renameFolder(self.getPathToRoot(clickedItem),clickedItem)
+            elif performed_action.whatsThis() == "checkout_version":
+                print("CHECKOUT_VERSION")
+            elif performed_action.whatsThis() == "open_version":
+                print("OPEN_VERSION")
+
 
     def renameFolder(self,path,item):
         dirname, ok = QInputDialog.getText(self, 'Rename Folder', f"Enter new name for the folder '{item.text(0)}':")
@@ -962,8 +991,8 @@ class Ui_Dialog(object):
                             for rev_db in val["__rev_dbs__"]:
                                 rev_db_node = QTreeWidgetItem()
                                 rev_db_node.setText(0,rev_db)
-                                if val["__rev_dbs__"][rev_db]:
-                                    rev_db_node.setText(1, (f"Checked-out by '{val['__rev_dbs__'][rev_db]}'"))
+                                if val["__rev_dbs__"][rev_db]['checked-out']:
+                                    rev_db_node.setText(1, (f"Checked-out by '{val['__rev_dbs__'][rev_db]['checked-out']}'"))
                                 if not self.doesToolExist(rev_db):
                                     rev_db_node.setDisabled(True)
                                 rev_db_node.setIcon(0,QtGui.QIcon(os.path.join(current_running_file_dir,"icons",f"{rev_db}.png")))
