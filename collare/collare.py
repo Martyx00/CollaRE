@@ -796,6 +796,7 @@ class Ui_Dialog(object):
 
     def checkinDBFile(self,path):
         # Performs check-in of the checked-out file, this is the only way to update DB files on the server
+        # It also pushes the changes.json file
         checkout = False
         questionBox = QMessageBox()
         answer = questionBox.question(self,"Check-in", f"Would you like to keep the file checked-out?", questionBox.Yes | questionBox.No)
@@ -803,6 +804,8 @@ class Ui_Dialog(object):
             checkout = True
         comment, ok = QInputDialog.getText(self, 'Check-in Comment', f"Enter comment for the check-in:")
         if ok:
+            if comment == "":
+                comment = "NoComment"
             containing_folder = os.path.join(str(collare_home),*path[:-1]) # Seperate folder for files
             filename = f"{path[-2]}.{path[-1]}"
             if path[-1] == "ghdb":

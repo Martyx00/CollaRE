@@ -1,5 +1,5 @@
 
-# CollaRE v0.1
+# CollaRE v0.2
 
 ![CollaRE](./collare/icons/collare-full-white.png)
 
@@ -83,6 +83,19 @@ Since the tool currently does not have any plugins or native hooks that would al
 When you just want to inspect the file you can right-click the desired DB file and select option `Open File` (or just double-click). If the file is checked-out to you this will open the local file and you can freely perform any changes to the DB file. When done (or when you simply want to push the changes) you can select the `Check-in` option. This will upload the changes to the server and prompt you whether you want to keep the file checked-out for further changes. If you want to discard your local changes select the `Undo Check-out` option from the context menu. This will discard your changes and allow you to continue with the file from the server. Opening a file without doing a `Check-out` operation first will open it in a fake read-only mode (you can do changes to the DB file but those will be lost next time you check-out or open the file).
 
 ![CollaRE](./images/checkout.gif)
+
+
+### Versioning
+
+The tool also supports versioning the DB files in a way that every `Check-in` action counts as a new version of the DB file. You will be prompted to insert a comment for the version which is used to give more context to the changes that are applied in that version. It is then possible to open or check-out the previous versions of the files and work on those.
+
+
+## Roadmap
+
+**v0.1** - Initial BETA release
+**v0.2** - BETA release with DB files versioning support
+**v0.3** - BETA release with comments/function names sync between DBs (PoC with two tools)
+**v1.0** - Initial production ready release with all major features implemented
 
 ## Disclaimer
 
