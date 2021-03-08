@@ -561,6 +561,7 @@ class Ui_Dialog(object):
                 return
             self.currentProjectManifest = response.json()
             self.currentProject = selectedProject
+            self.frame_6.setEnabled(True)
             self.projectTab.setEnabled(True)
             self.mainTabWidget.setCurrentIndex(1)
             self.projectTreeView.setProjectData(self.server,self.currentProject,self.username,self.password,self.cert,self)
@@ -612,6 +613,7 @@ class Ui_Dialog(object):
             self.showPopupBox("Success",f"New project '{projectName}' was created!",QMessageBox.Information)
             self.populateExistingProjects()
             self.currentProject = projectName
+            self.frame_6.setEnabled(True)
             self.currentProjectManifest = response.json()
             self.projectTab.setEnabled(True)
             self.mainTabWidget.setCurrentIndex(1)
@@ -714,6 +716,9 @@ class Ui_Dialog(object):
             file_path = os.path.join(destination,filename)
             with open(file_path,"wb") as dest_file:
                 dest_file.write(base64.b64decode(response_data['file']))
+            # TODO download changes.json
+            with open(os.path.join(destination,"changes.json"),"wb") as changes_file:
+                changes_file.write(base64.b64decode(response_data['changes']))
             if path[-1] == "ghdb":
                 destination = os.path.join(str(collare_home),*path[:-1])
                 file_path = os.path.join(destination,filename)
@@ -770,6 +775,9 @@ class Ui_Dialog(object):
         file_path = os.path.join(destination,filename)
         with open(file_path,"wb") as dest_file:
             dest_file.write(base64.b64decode(response_data['file']))
+        # TODO download changes.json
+        with open(os.path.join(destination,"changes.json"),"wb") as changes_file:
+            changes_file.write(base64.b64decode(response_data['changes']))
         if path[-1] == "bndb":
             Popen(["binaryninja", file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "hop":
@@ -796,7 +804,7 @@ class Ui_Dialog(object):
 
     def checkinDBFile(self,path):
         # Performs check-in of the checked-out file, this is the only way to update DB files on the server
-        # It also pushes the changes.json file
+        # TODO It also pushes the changes.json file
         checkout = False
         questionBox = QMessageBox()
         answer = questionBox.question(self,"Check-in", f"Would you like to keep the file checked-out?", questionBox.Yes | questionBox.No)
@@ -813,9 +821,11 @@ class Ui_Dialog(object):
                 with ZipFile(os.path.join(containing_folder,filename), 'w') as zipObj:
                     zipObj.write(gpr_path,os.path.basename(gpr_path))
                     self.addFolderToZip(zipObj,gpr_path.replace("gpr","rep"),os.path.dirname(gpr_path))
+            with open(os.path.join(containing_folder,"changes.json"), "rb") as changes_file:
+                changes_content = base64.b64encode(changes_file.read()).decode("utf-8")
             with open(os.path.join(containing_folder,filename), "rb") as data_file:
                 encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
-            values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename,"checkout":checkout,"comment":comment}
+            values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename,"checkout":checkout,"comment":comment,"changes":changes_content}
             response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert)
             if response.status_code != 200:
                 self.showPopupBox("Error During Check-In","Something went horribly wrong!",QMessageBox.Critical)
@@ -1277,6 +1287,7 @@ class Ui_Dialog(object):
         self.frame_6.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_6.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_6.setObjectName("frame_6")
+        self.frame_6.setEnabled(False)
         self.label_17 = QtWidgets.QLabel(self.frame_6)
         self.label_17.setGeometry(QtCore.QRect(10, 10, 281, 17))
         font = QtGui.QFont()
