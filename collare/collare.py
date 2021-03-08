@@ -415,7 +415,7 @@ class Ui_Dialog(object):
                 delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
                 
                 checked,current_user =  self.isCheckedOut(self.getPathToRoot(clickedItem))
-                # TODO submenu for version specific checkout and open
+                # submenu for version specific checkout and open
                 manifestPath = self.getPathToRoot(clickedItem)[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(clickedItem)[-1]]
                 versions = reduce(dict.get,manifestPath,self.currentProjectManifest)["versions"]
                 self.menu.addSection("Previous File Versions")
@@ -427,18 +427,16 @@ class Ui_Dialog(object):
                 checkoutSubmenu.setIcon(QIcon(os.path.join(current_running_file_dir,"icons","download.png")))
                 counter = 0
                 for version in versions:
-                    checkoutAction = QtWidgets.QAction(f"#{counter}: {version}")
+                    checkoutAction = checkoutSubmenu.addAction(f"#{counter}: {version}")
                     checkoutAction.setWhatsThis("checkout_version")
-                    checkoutSubmenu.addAction(checkoutAction)
-                    openAction = QtWidgets.QAction(f"#{counter}: {version}")
+                    openAction = openSubmenu.addAction(f"#{counter}: {version}")
                     openAction.setWhatsThis("open_version")
-                    openSubmenu.addAction(openAction)
                     counter += 1
                 
-                # TODO end submenu
                 if checked:
                     checkout.setEnabled(False)
                     checkoutSubmenu.setEnabled(False)
+                    openSubmenu.setEnabled(False)
                     if not current_user:
                         checkin.setEnabled(False)
                         undo_checkout.setEnabled(False)
@@ -450,6 +448,7 @@ class Ui_Dialog(object):
                     open_file.setEnabled(False)
                     checkout.setEnabled(False)
                     checkoutSubmenu.setEnabled(False)
+                    openSubmenu.setEnabled(False)
                     checkin.setEnabled(False)
                     undo_checkout.setEnabled(False)
                 self.menu.addMenu(openSubmenu)
@@ -479,7 +478,6 @@ class Ui_Dialog(object):
             elif performed_action.text() == "Push Local DBs":
                 self.pushLocal(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Check-out":
-                # TODO verify
                 manifestPath = self.getPathToRoot(clickedItem)[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(clickedItem)[-1]]
                 version = reduce(dict.get,manifestPath,self.currentProjectManifest)["latest"]
                 self.checkoutDBFile(self.getPathToRoot(clickedItem),version)
@@ -488,7 +486,6 @@ class Ui_Dialog(object):
             elif performed_action.text() == "Undo Check-out":
                 self.undoCheckoutDBFile(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Open File":
-                # TODO verify
                 manifestPath = self.getPathToRoot(clickedItem)[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(clickedItem)[-1]]
                 version = reduce(dict.get,manifestPath,self.currentProjectManifest)["latest"]
                 self.openDBFile(self.getPathToRoot(clickedItem),version)
@@ -497,9 +494,13 @@ class Ui_Dialog(object):
             elif performed_action.text() == "Rename":
                 self.renameFolder(self.getPathToRoot(clickedItem),clickedItem)
             elif performed_action.whatsThis() == "checkout_version":
-                print("CHECKOUT_VERSION")
+                self.checkoutDBFile(self.getPathToRoot(clickedItem),self.parseVersionFromText(performed_action.text()))
             elif performed_action.whatsThis() == "open_version":
-                print("OPEN_VERSION")
+                self.openDBFile(self.getPathToRoot(clickedItem),self.parseVersionFromText(performed_action.text()))
+
+
+    def parseVersionFromText(self,text):
+        return int(text[1:text.find(":")])
 
 
     def renameFolder(self,path,item):
@@ -687,7 +688,6 @@ class Ui_Dialog(object):
         selected_item = self.projectTreeView.selectedItems()
         if selected_item:
             if selected_item[0].parent().whatsThis(0) == "binary":
-                # TODO get version
                 manifestPath = self.getPathToRoot(selected_item[0])[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(selected_item[0])[-1]]
                 version = reduce(dict.get,manifestPath,self.currentProjectManifest)["latest"]
                 self.openDBFile(self.getPathToRoot(selected_item[0]),version)
@@ -796,7 +796,6 @@ class Ui_Dialog(object):
 
     def checkinDBFile(self,path):
         # Performs check-in of the checked-out file, this is the only way to update DB files on the server
-        # TODO comment
         checkout = False
         questionBox = QMessageBox()
         answer = questionBox.question(self,"Check-in", f"Would you like to keep the file checked-out?", questionBox.Yes | questionBox.No)
@@ -804,7 +803,7 @@ class Ui_Dialog(object):
             checkout = True
         comment, ok = QInputDialog.getText(self, 'Check-in Comment', f"Enter comment for the check-in:")
         if ok:
-            containing_folder = os.path.join(str(collare_home),*path[:-1]) # Sperate folder for files
+            containing_folder = os.path.join(str(collare_home),*path[:-1]) # Seperate folder for files
             filename = f"{path[-2]}.{path[-1]}"
             if path[-1] == "ghdb":
                 gpr_path = os.path.join(containing_folder,path[-2] + ".gpr")
@@ -983,8 +982,6 @@ class Ui_Dialog(object):
         if tool == "jdb2" and self.which("jeb"):
             return True
         return False
-
-
 
     def refreshProjectTree(self):
         self.projectTreeView.clear()
