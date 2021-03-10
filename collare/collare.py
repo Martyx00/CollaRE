@@ -774,7 +774,6 @@ class Ui_Dialog(object):
         file_path = os.path.join(destination,filename)
         with open(file_path,"wb") as dest_file:
             dest_file.write(base64.b64decode(response_data['file']))
-        # TODO download changes.json
         with open(os.path.join(destination,"changes.json"),"wb") as changes_file:
             changes_file.write(base64.b64decode(response_data['changes']))
         if path[-1] == "bndb":
@@ -803,7 +802,6 @@ class Ui_Dialog(object):
 
     def checkinDBFile(self,path):
         # Performs check-in of the checked-out file, this is the only way to update DB files on the server
-        # TODO It also pushes the changes.json file
         checkout = False
         questionBox = QMessageBox()
         answer = questionBox.question(self,"Check-in", f"Would you like to keep the file checked-out?", questionBox.Yes | questionBox.No)

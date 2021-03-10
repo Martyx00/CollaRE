@@ -14,23 +14,23 @@ def import_changes(bv):
 			if not changes["comments"][comment] in bv.get_comment_at(int(comment,10)):
 				current_comment = bv.get_comment_at(int(comment,10))
 				for function in bv.get_functions_containing(int(comment,10)):
-					if not changes["comments"][comment] in function.get_comment_at(int(comment,10)):
+					if function.get_comment_at(int(comment,10)):
 						if current_comment:
 							current_comment += "; " + function.get_comment_at(int(comment,10))
 						else:
 							current_comment = function.get_comment_at(int(comment,10))
-						if current_comment:
-							function.set_comment_at(int(comment,10),current_comment + "; " +changes["comments"][comment])
-						else:
+						if current_comment in changes["comments"][comment]:
 							function.set_comment_at(int(comment,10),changes["comments"][comment])
+						else:
+							function.set_comment_at(int(comment,10),current_comment + "; "+ changes["comments"][comment])
+					else:
+						function.set_comment_at(int(comment,10),changes["comments"][comment])
 		for function in changes["function_names"]:
 			# TODO if the function does not exist, create it - needs to be tested properly
 			if not bv.get_function_at(int(function,10)):
 				bv.create_user_function(int(function,10))
-			if bv.get_function_at(int(function,10)).highest_address == changes["function_names"][function]["end"]:
-				bv.get_function_at(int(function,10)).name = changes["function_names"][function]["name"]
-			
-
+			#if bv.get_function_at(int(function,10)).highest_address == changes["function_names"][function]["end"]:
+			bv.get_function_at(int(function,10)).name = changes["function_names"][function]["name"]
 	show_message_box("CollaRE Import", "Import successful!", buttons=0, icon=0)
 
 
