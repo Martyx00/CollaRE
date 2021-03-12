@@ -11,10 +11,12 @@ if ".collare_projects" in doc.getDatabaseFilePath():
                 if seg.getCommentAtAddress(int(comment,10)):
                     if seg.getCommentAtAddress(int(comment,10)) in changes["comments"][comment]:
                         seg.setCommentAtAddress(int(comment,10),changes["comments"][comment])
+                    elif changes["comments"][comment] in seg.getCommentAtAddress(int(comment,10)):
+                        pass
                     else:
                         current_comment = seg.getCommentAtAddress(int(comment,10))
                         if current_comment:
-                            seg.setCommentAtAddress(int(comment,10),current_comment + "; " +changes["comments"][comment])
+                            seg.setCommentAtAddress(int(comment,10),current_comment + "; " + changes["comments"][comment])
                         else:
                             seg.setCommentAtAddress(int(comment,10),changes["comments"][comment])
                 else:

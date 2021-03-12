@@ -21,6 +21,8 @@ def import_changes(bv):
 							current_comment = function.get_comment_at(int(comment,10))
 						if current_comment in changes["comments"][comment]:
 							function.set_comment_at(int(comment,10),changes["comments"][comment])
+						elif changes["comments"][comment] in current_comment:
+							pass
 						else:
 							function.set_comment_at(int(comment,10),current_comment + "; "+ changes["comments"][comment])
 					else:

@@ -91,7 +91,7 @@ The tool also supports versioning the DB files in a way that every `Check-in` ac
 
 ### Plugins
 
-The plugins folder within this repository contains plugins for the supported tools which allow you to share comments and function names between the tools in case that you work on one binary with multiple tools. Follow the standard plugin installation instructions for the tool you are interested in. Each plugin offers an `Import` and an `Export` function. When you plan to share the data between the tools always make sure that you `Import` data first to avoid renaming functions that were already renamed by someone else.
+The plugins folder within this repository contains plugins for the supported tools which allow you to share comments and function names between the tools in case that you work on one binary with multiple tools. Follow the standard plugin installation instructions for the tool you are interested in. Each plugin offers an `Import` and an `Export` function. When you plan to share the data between the tools always make sure that you `Import` data first to avoid renaming functions that were already renamed by someone else. If the plugin comes with some catches, those are mentioned in the README file of the given plugin.
 
 ## Roadmap
 
