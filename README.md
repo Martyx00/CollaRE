@@ -48,7 +48,7 @@ To enable support for this tool add a file `jeb` to your path (when you open `cm
 
 ### IDA Pro
 
-To enable support for this tool add a file `ida64` to your path (when you open `cmd`/`terminal` writing `ida64` should start the application).
+To enable support for this tool add a files `ida64` and `ida` to your path (when you open `cmd`/`terminal` writing `ida64`/`ida` should start the application).
 
 ### Ghidra
 

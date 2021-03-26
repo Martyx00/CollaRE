@@ -12,7 +12,7 @@ import os, requests, json, re, base64, shutil, sys, time
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
 connected = False
-supported_db_names = ["bndb","i64","hop","rzdb","ghdb","jdb2"]
+supported_db_names = ["bndb","i64","idb","hop","rzdb","ghdb","jdb2"]
 
 class ProjectTree(QTreeWidget):
     def __init__(self, parent):
@@ -302,6 +302,8 @@ class Ui_Dialog(object):
             Popen([f"Cutter",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif tool == "ida":
             Popen([f"ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+        elif tool == "ida32":
+            Popen([f"ida",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "jeb":
             if os.name == "nt":
                 jeb = "jeb.bat"
@@ -369,7 +371,8 @@ class Ui_Dialog(object):
             elif item.whatsThis(0) == "binary":
                 # Right click on original binary
                 self.menu.addSection("Process in:")
-                open_ida = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","i64.png")),"IDA Pro")
+                open_ida = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","i64.png")),"IDA Pro (64-bit)")
+                open_ida32 = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","i64.png")),"IDA Pro (32-bit)")
                 open_rizin = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","rzdb.png")),"Cutter")
                 open_binja = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","bndb.png")),"Binary Ninja")
                 open_hop = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","hop.png")),"Hopper Disassembler")
@@ -382,6 +385,8 @@ class Ui_Dialog(object):
                     disabled_tool = clickedItem.child(node).text(0)
                     if "i64" in disabled_tool:
                         open_ida.setEnabled(False)
+                    if "idb" in disabled_tool:
+                        open_ida32.setEnabled(False)
                     if "bndb" in disabled_tool:
                         open_binja.setEnabled(False)
                     if "hop" in disabled_tool:
@@ -469,8 +474,10 @@ class Ui_Dialog(object):
                 self.processIn("hopper",self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Cutter":
                 self.processIn("cutter",self.getPathToRoot(clickedItem))
-            elif performed_action.text() == "IDA Pro":
+            elif performed_action.text() == "IDA Pro (64-bit)":
                 self.processIn("ida",self.getPathToRoot(clickedItem))
+            elif performed_action.text() == "IDA Pro (32-bit)":
+                self.processIn("ida32",self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Ghidra":
                 self.processIn("ghidra",self.getPathToRoot(clickedItem))
             elif performed_action.text() == "JEB":
@@ -734,6 +741,8 @@ class Ui_Dialog(object):
             Popen([f'Cutter',"-p", file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "i64":
             Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+        elif path[-1] == "idb":
+            Popen([f'ida',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
             print(file_path)
             # has to be jeb.bat for windows
@@ -784,6 +793,8 @@ class Ui_Dialog(object):
             Popen(["Cutter","-p",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "i64":
             Popen(["ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+        elif path[-1] == "idb":
+            Popen(["ida",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
             if os.name == "nt":
                 jeb = "jeb.bat"
@@ -980,6 +991,8 @@ class Ui_Dialog(object):
 
     def doesToolExist(self,tool):
         if tool == "i64" and self.which("ida64"):
+            return True
+        if tool == "idb" and self.which("ida"):
             return True
         if tool == "bndb" and self.which("binaryninja"):
             return True
