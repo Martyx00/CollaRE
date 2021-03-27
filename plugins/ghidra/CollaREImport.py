@@ -30,6 +30,6 @@ if ".collare_projects" in project_dir:
         else:
             setPreComment(address,changes["comments"][comment])
 
-    print("[*] Import successful!")
+    popup("[*] Import successful!")
 else:
-    print("[!] This is not CollaRE project!")
+    popup("[!] This is not CollaRE project!")

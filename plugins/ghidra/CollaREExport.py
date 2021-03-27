@@ -29,6 +29,6 @@ if ".collare_projects" in project_dir:
     with open(os.path.join(project_dir,"changes.json"),"w") as changes_file:
         json.dump(changes,changes_file)
     
-    print("[*] Export successful!")
+    popup("[*] Export successful!")
 else:
-    print("[!] This is not CollaRE project!")
+    popup("[!] This is not CollaRE project!")
