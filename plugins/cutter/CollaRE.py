@@ -17,6 +17,8 @@ class CollaREDockWidget(cutter.CutterDockWidget):
         importButton.clicked.connect(self.collare_import)
 
     def collare_export(self):
+        # TODO check if collare project
+        print(str(cutter.getFileInfo()))
         changes = {"function_names":{},"comments":{}}
         QMessageBox.warning(self, "CollaRE", "Export", QMessageBox.Ok | QMessageBox.Cancel)
         functions = cutter.cmd("afij @@F")
@@ -32,13 +34,15 @@ class CollaREDockWidget(cutter.CutterDockWidget):
         comments = json.loads(comments)
         for comment in comments:
             changes["comments"][comment["offset"]] = comment["name"]
-        print(str(changes))
-        #print(functions[:14050])
+        #print(str(changes))
+        # TODO write changes to file
 
     def collare_import(self):
+        # TODO check if collare project
         QMessageBox.information(self, "CollaRE", "Import", QMessageBox.Ok | QMessageBox.Cancel)
         #print(cutter.getOpenedFiles())
         #changes = json.load(changes_file)
+        # TODO read changes from file
         changes = {"function_names":{},"comments":{}}
         for comment in changes["comments"]:
             if cutter.getComment(int(comment,10)):
