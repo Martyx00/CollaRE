@@ -5,6 +5,7 @@ from idc import *
 import ida_nalt
 import os, json
 
+# TODO this has to also somehow work with hexrays comments
 
 def get_comment(ea):
     comment = ""
@@ -62,6 +63,7 @@ class CollaREExportAction(idaapi.action_handler_t):
                     json.dump(changes,changes_file)
 
             print("[CollaRE] Export completed!")
+            info("CollaRE Export completed!")
         else:
             print("[CollaRE] Export failed! Not a CollaRE project!")
             warning("This is not a CollaRE project!")
@@ -71,8 +73,6 @@ class CollaREExportAction(idaapi.action_handler_t):
     def update(self, ctx):
         return idaapi.AST_ENABLE_ALWAYS
     
-
-# 1) Create the handler class
 class CollaREImportAction(idaapi.action_handler_t):
     def __init__(self):
         idaapi.action_handler_t.__init__(self)
@@ -98,6 +98,7 @@ class CollaREImportAction(idaapi.action_handler_t):
                     else:
                         set_cmt(int(comment,10),changes["comments"][comment],True)
             print("[*] Import completed!")
+            info("CollaRE Import completed!")
         else:
             print("[!] This is not a CollaRE project!")
             warning("This is not a CollaRE project!")
@@ -109,9 +110,9 @@ class CollaREImportAction(idaapi.action_handler_t):
 
 
 class collare_t(idaapi.plugin_t):
-    comment = "CollaRE Exporter"
+    comment = "CollaRE"
     help = "Use this plugin to share function names and comments across differrent tool within CollaRE workspace."
-    wanted_name = "CollaRE Exporter"
+    wanted_name = "CollaRE"
     wanted_hotkey = ""
     flags = idaapi.PLUGIN_KEEP
 
@@ -144,53 +145,6 @@ class collare_t(idaapi.plugin_t):
 
     def term(self):
         pass
-
-    def collare_import(self):
-        print("Collare IMPORT")
-
-    def collare_export(self):
-        print("Exporting")
-        if ".collare_projects" in ida_nalt.get_input_file_path():
-            changes = {"function_names":{},"comments":{}}
-            for segea in Segments():
-                for funcea in Functions(segea):
-                    # Name
-                    functionName = get_func_name(funcea)
-                    if hex(funcea)[2:].upper() not in functionName:
-                        changes["function_names"][int(funcea)] = {"name":functionName,"end":0}
-                    #print(functionName)
-                    # Address   
-                    #print(funcea)
-                for ea in range(segea,get_segm_end(segea)):
-                    comment = ""
-                    repComment = get_cmt(ea, True)
-                    nonRepComment = get_cmt(ea, False)
-                    repFunComment = get_func_cmt(ea,True)
-                    nonRepFunComment = get_func_cmt(ea,False)
-                    if repComment:
-                        comment += repComment
-                    if nonRepComment:
-                        if comment:
-                            comment += "; "
-                        comment += nonRepComment
-                    if repFunComment:
-                        if comment:
-                            comment += "; "
-                        comment += repFunComment
-                    if nonRepFunComment:
-                        if comment:
-                            comment += "; "
-                        comment += nonRepFunComment
-                    if comment:
-                        changes["comments"][ea] = comment 
-                
-                with open(os.path.join(os.path.dirname(ida_nalt.get_input_file_path()),"changes2.json"),"w") as changes_file:
-                    json.dump(changes,changes_file)
-
-            print("[*] Export completed!")
-        else:
-            print("[!] This is not a CollaRE project!")
-
 
 def PLUGIN_ENTRY():
     return collare_t()
