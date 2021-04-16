@@ -28,7 +28,6 @@ def import_changes(bv):
 					else:
 						function.set_comment_at(int(comment,10),changes["comments"][comment])
 		for function in changes["function_names"]:
-			# TODO if the function does not exist, create it - needs to be tested properly
 			if not bv.get_function_at(int(function,10)):
 				bv.create_user_function(int(function,10))
 			#if bv.get_function_at(int(function,10)).highest_address == changes["function_names"][function]["end"]:

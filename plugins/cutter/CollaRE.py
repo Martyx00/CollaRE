@@ -8,7 +8,6 @@ class CollaREExport(cutter.CutterPlugin):
     author = "Martin Petran"
 
     def setupPlugin(self):
-        
         pass
 
     def setupInterface(self, main):
@@ -41,8 +40,6 @@ class CollaREExport(cutter.CutterPlugin):
             comments = json.loads(comments)
             for comment in comments:
                 changes["comments"][comment["offset"]] = comment["name"]
-            #print(str(changes))
-            # TODO write changes to file
             with open(os.path.join(os.path.dirname(project_path),"changes.json"),"w") as changes_file:
                 json.dump(changes,changes_file)
             QMessageBox.information(self.main, "CollaRE", "Export Done!", QMessageBox.Ok)
@@ -53,7 +50,6 @@ class CollaREExport(cutter.CutterPlugin):
         return cutter.cmd(f"CC.{hex(address)}").rstrip()
 
     def set_comment_at(self,address,comment):
-        # TODO escape @ with \
         escaped_at = "\\@"
         escaped_semi = "\\;"
         cutter.cmd(f'CCa {hex(address)} {comment.replace("@",escaped_at).replace(";",escaped_semi)}')

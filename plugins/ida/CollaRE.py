@@ -36,11 +36,9 @@ def clear_comments(ea):
     set_func_cmt(ea,"",True)
     
 
-# 1) Create the handler class
 class CollaREExportAction(idaapi.action_handler_t):
     def __init__(self):
         idaapi.action_handler_t.__init__(self)
-    # Say hello when invoked.
     def activate(self, ctx):
         print("[CollaRE] Exporting ...")
         if ".collare_projects" in ida_nalt.get_input_file_path():
@@ -51,9 +49,6 @@ class CollaREExportAction(idaapi.action_handler_t):
                     functionName = get_func_name(funcea)
                     if hex(funcea)[2:].upper() not in functionName:
                         changes["function_names"][int(funcea)] = {"name":functionName,"end":0}
-                    #print(functionName)
-                    # Address   
-                    #print(funcea)
                 for ea in range(segea,get_segm_end(segea)):
                     comment = get_comment(ea)
                     if comment:
