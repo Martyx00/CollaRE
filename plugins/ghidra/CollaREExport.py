@@ -7,7 +7,7 @@
 
 import os, json
 
-changes = {"function_names":{},"comments":{}}
+changes = {"function_names":{},"comments":{},"base": int(currentProgram.getImageBase().getOffset())}
 project_dir = getProjectRootFolder().getProjectLocator().getLocation()
 if ".collare_projects" in project_dir:
     # Functions

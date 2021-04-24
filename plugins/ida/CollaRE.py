@@ -85,13 +85,13 @@ class CollaREImportAction(idaapi.action_handler_t):
                     clear_comments(int(comment,10))
                     if currentComment:
                         if currentComment in changes["comments"][comment]:
-                            set_cmt(int(comment,10),changes["comments"][comment],True)
+                            set_cmt(int(comment,10),changes["comments"][comment],False)
                         elif changes["comments"][comment] in currentComment:
-                            set_cmt(int(comment,10),currentComment,True)
+                            set_cmt(int(comment,10),currentComment,False)
                         else:
-                            set_cmt(int(comment,10),currentComment + "; " + changes["comments"][comment],True)
+                            set_cmt(int(comment,10),currentComment + "; " + changes["comments"][comment],False)
                     else:
-                        set_cmt(int(comment,10),changes["comments"][comment],True)
+                        set_cmt(int(comment,10),changes["comments"][comment],False)
             print("[*] Import completed!")
             info("CollaRE Import completed!")
         else:

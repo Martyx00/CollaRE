@@ -10,28 +10,35 @@ def import_changes(bv):
 		return
 	with open(os.path.join(os.path.dirname(bv.file.filename),"changes.json"),"r") as changes_file:
 		changes = json.load(changes_file)
+		# 0(binja) - 10000(file) = binja offset = file_offset + (-10000)
+		# 10000(binja) - 0(file) = file_offset + 10000
+		base = changes["base"]
+		if base != bv.start:
+			base = bv.start - base
 		for comment in changes["comments"]:
-			if not changes["comments"][comment] in bv.get_comment_at(int(comment,10)):
-				current_comment = bv.get_comment_at(int(comment,10))
-				for function in bv.get_functions_containing(int(comment,10)):
-					if function.get_comment_at(int(comment,10)):
-						if current_comment:
-							current_comment += "; " + function.get_comment_at(int(comment,10))
-						else:
-							current_comment = function.get_comment_at(int(comment,10))
-						if current_comment in changes["comments"][comment]:
-							function.set_comment_at(int(comment,10),changes["comments"][comment])
-						elif changes["comments"][comment] in current_comment:
-							pass
-						else:
-							function.set_comment_at(int(comment,10),current_comment + "; "+ changes["comments"][comment])
+			comment_address = int(comment,10) + base
+			if not changes["comments"][comment] in bv.get_comment_at(comment_address):
+				current_comment = bv.get_comment_at(comment_address)
+				for function in bv.get_functions_containing(comment_address):
+					if function.get_comment_at(comment_address) and current_comment:
+						current_comment += "; " + function.get_comment_at(comment_address)
 					else:
-						function.set_comment_at(int(comment,10),changes["comments"][comment])
+						current_comment = function.get_comment_at(comment_address)
+					
+					if current_comment in changes["comments"][comment]:
+						bv.set_comment_at(comment_address,"")
+						function.set_comment_at(comment_address,"")
+						function.set_comment_at(comment_address,changes["comments"][comment])
+					elif changes["comments"][comment] in current_comment:
+						pass
+					else:
+						function.set_comment_at(comment_address,current_comment + "; "+ changes["comments"][comment])
 		for function in changes["function_names"]:
-			if not bv.get_function_at(int(function,10)):
-				bv.create_user_function(int(function,10))
-			#if bv.get_function_at(int(function,10)).highest_address == changes["function_names"][function]["end"]:
-			bv.get_function_at(int(function,10)).name = changes["function_names"][function]["name"]
+			function_address = int(function,10) + base
+			if not bv.get_function_at(function_address):
+				bv.create_user_function(function_address)
+			if bv.get_function_at(function_address):
+				bv.get_function_at(function_address).name = changes["function_names"][function]["name"]
 	show_message_box("CollaRE Import", "Import successful!", buttons=0, icon=0)
 
 
@@ -45,7 +52,7 @@ def export_changes(bv):
 	result = show_message_box("Import not performed in this session", "It is strongly suggested to first perform an import before exporting any data. Would you like to continue?", buttons=1, icon=0)
 	if result == 0:
 		return
-	changes = {"function_names":{},"comments":{}}
+	changes = {"function_names":{},"comments":{},"base":bv.start}
 	for function in bv.functions:
 		changes["comments"].update(function.comments)
 		# Avoid storing default names that contain function address

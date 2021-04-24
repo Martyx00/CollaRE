@@ -6,14 +6,15 @@ doc = Document.getCurrentDocument()
 if ".collare_projects" in doc.getDatabaseFilePath():
     result = doc.message("Make sure to do Import first to avoid loosing important data exported by others!",["Ok","Cancel"])
     if result == 0:
-        changes = {"function_names":{},"comments":{}}
+        changes = {"function_names":{},"comments":{},"base":int(doc.getSegment(0).getFileOffset())}
         for seg_index in range(0,doc.getSegmentCount()):
             seg = doc.getSegment(seg_index)
             for procedure_index in range(0,seg.getProcedureCount()):
                 address = seg.getProcedureAtIndex(procedure_index).getEntryPoint()
                 function_name = seg.getNameAtAddress(address)
-                if hex(int(address))[2:] not in function_name:
-                    changes["function_names"][int(address)] = {"name":function_name,"end":0}
+                if function_name:
+                    if hex(int(address))[2:] not in function_name:
+                        changes["function_names"][int(address)] = {"name":function_name,"end":0}
             for addr in range(seg.getStartingAddress(),seg.getStartingAddress()+seg.getLength()):
                 comment = seg.getCommentAtAddress(addr)
                 if comment:

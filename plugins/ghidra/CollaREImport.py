@@ -11,11 +11,15 @@ project_dir = getProjectRootFolder().getProjectLocator().getLocation()
 if ".collare_projects" in project_dir:
     with open(os.path.join(project_dir,"changes.json"),"r") as changes_file:
         changes = json.load(changes_file)
+    base = changes["base"]
+    if base != int(currentProgram.getImageBase().getOffset()):
+        base = int(currentProgram.getImageBase().getOffset()) - base
     for function_address in changes["function_names"]:
-        function = getFunctionAt(toAddr(int(function_address)))
-        function.setName(changes["function_names"][function_address]["name"],ghidra.program.model.symbol.SourceType.USER_DEFINED)
+        function = getFunctionAt(toAddr(int(function_address) + base))
+        if function:
+            function.setName(changes["function_names"][function_address]["name"],ghidra.program.model.symbol.SourceType.USER_DEFINED)
     for comment in changes["comments"]:
-        address = toAddr(int(comment,10))
+        address = toAddr(int(comment,10) + base) 
         if getPreComment(address):
             if getPreComment(address) in changes["comments"][comment]:
                 setPreComment(address,changes["comments"][comment])

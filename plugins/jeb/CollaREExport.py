@@ -15,7 +15,7 @@ class CollaREExport(IScript):
         unit = prj.findUnit(INativeCodeUnit)
         assert unit, 'Need a native code unit'
 
-        if not ".collare_projects" in prj.getName():
+        if ".collare_projects" in prj.getName():
             changes = {"function_names":{},"comments":{}}
             for function in unit.getMethods():
                 if function.getMemoryAddress():

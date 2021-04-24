@@ -16,7 +16,7 @@ class CollaREImport(IScript):
         unit = prj.findUnit(INativeCodeUnit)
         assert unit, 'Need a native code unit'
 
-        if not ".collare_projects" in prj.getName():
+        if ".collare_projects" in prj.getName():
             with open(os.path.join(os.path.dirname(prj.getName()),"changes.json"),"r") as changes_file:
                 changes = json.load(changes_file)
                 for function in unit.getMethods():
