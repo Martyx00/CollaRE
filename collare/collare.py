@@ -422,7 +422,7 @@ class Ui_Dialog(object):
                     open_ghidra.setEnabled(False)
                 if not self.which("jeb"):
                     open_jeb.setEnabled(False)
-                if not self.which("android-studio") or ".apk" not in clickedItem.text(0).lower():
+                if not self.which("android-studio") or ".apk" not in clickedItem.text(0).lower() or ".jar" not in clickedItem.text(0).lower():
                     open_asp.setEnabled(False)
             else:
                 # Right click on one of the DB files
@@ -782,7 +782,7 @@ class Ui_Dialog(object):
             Popen([f'Cutter',"-p", file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "asp":
             # TODO proper command
-            Popen(['android-studio',os.path.join(destination,filename.replace(".apk.asp","")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(['android-studio',os.path.join(destination,filename.replace(".apk.asp","").replace(".jar.asp","")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "idb":
@@ -856,7 +856,7 @@ class Ui_Dialog(object):
             except:
                 pass
             shutil.unpack_archive(file_path, destination, "zip") 
-            Popen(['android-studio',os.path.join(destination,filename.replace(".apk.asp","")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(['android-studio',os.path.join(destination,filename.replace(".apk.asp","").replace(".jar.asp","")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen(["ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "idb":
