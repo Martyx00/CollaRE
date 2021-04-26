@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
-    <LinearLayout android:orientation="horizontal" android:id="@+id/nav_bar" android:layout_width="match_parent" android:layout_height="wrap_content">
-        <TextView android:textSize="@dimen/secure_webview_text_size" android:id="@+id/done_button" android:padding="@dimen/secure_webview_text_padding" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/secure_webview_done_text"/>
-        <TextView android:textSize="@dimen/secure_webview_text_size" android:textStyle="bold" android:layout_gravity="center" android:id="@+id/textView" android:padding="@dimen/secure_webview_text_padding" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-    </LinearLayout>
-    <View android:background="@android:color/darker_gray" android:layout_width="match_parent" android:layout_height="0.5dp"/>
-    <WebView android:id="@+id/secure_webview" android:layout_width="match_parent" android:layout_height="match_parent"/>
-</LinearLayout>

@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
-    <TextView android:textSize="11sp" android:textColor="@android:color/white" android:gravity="right" android:layout_gravity="top|right|center_vertical|center_horizontal|center" android:id="@+id/fps_text" android:background="#a4141823" android:padding="3dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="3dp"/>
-</merge>
