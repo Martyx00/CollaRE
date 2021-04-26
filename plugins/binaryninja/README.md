@@ -1,4 +1,4 @@
-# CollaRE (v0.1)
+# CollaRE (v1.0)
 Author: **Martin Petran**
 _This plugin allows synchronization of data between different databases in CollaRE project._
 ## Description:

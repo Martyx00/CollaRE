@@ -22,7 +22,7 @@
 		"installers": [],
 		"other": ["This plugin is designed to work with [CollaRE](https://github.com/Martyx00/CollaRE)."]
 	},
-	"version": "0.1",
+	"version": "1.0",
 	"author": "Martin Petran",
 	"minimumbinaryninjaversion": 2263
 }

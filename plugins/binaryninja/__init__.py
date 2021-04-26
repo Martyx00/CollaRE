@@ -10,8 +10,6 @@ def import_changes(bv):
 		return
 	with open(os.path.join(os.path.dirname(bv.file.filename),"changes.json"),"r") as changes_file:
 		changes = json.load(changes_file)
-		# 0(binja) - 10000(file) = binja offset = file_offset + (-10000)
-		# 10000(binja) - 0(file) = file_offset + 10000
 		base = changes["base"]
 		if base != bv.start:
 			base = bv.start - base
