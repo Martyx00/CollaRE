@@ -42,7 +42,7 @@ class CollaREExportAction(idaapi.action_handler_t):
     def activate(self, ctx):
         print("[CollaRE] Exporting ...")
         if ".collare_projects" in ida_nalt.get_input_file_path():
-            changes = {"function_names":{},"comments":{}}
+            changes = {"function_names":{},"comments":{},"base": int(idaapi.get_imagebase())}
             for segea in Segments():
                 for funcea in Functions(segea):
                     # Name
@@ -77,21 +77,28 @@ class CollaREImportAction(idaapi.action_handler_t):
         if ".collare_projects" in ida_nalt.get_input_file_path():
             with open(os.path.join(os.path.dirname(ida_nalt.get_input_file_path()),"changes.json"),"r") as changes_file:
                 changes = json.load(changes_file)
+                base = changes["base"]
+                if base != int(idaapi.get_imagebase()):
+                    base = int(idaapi.get_imagebase()) - base
+                else:
+                    base = 0
                 for function in changes["function_names"]:
                     # Set function names
-                    idaapi.set_name(int(function),str(changes["function_names"][function]["name"]),idaapi.SN_FORCE)
+                    function_address = int(function) + base
+                    idaapi.set_name(function_address,str(changes["function_names"][function]["name"]),idaapi.SN_FORCE)
                 for comment in changes["comments"]:
-                    currentComment = get_comment(int(comment,10))
-                    clear_comments(int(comment,10))
+                    comment_address = int(comment,10) + base
+                    currentComment = get_comment(comment_address)
+                    clear_comments(comment_address)
                     if currentComment:
                         if currentComment in changes["comments"][comment]:
-                            set_cmt(int(comment,10),changes["comments"][comment],False)
+                            set_cmt(comment_address,changes["comments"][comment],False)
                         elif changes["comments"][comment] in currentComment:
-                            set_cmt(int(comment,10),currentComment,False)
+                            set_cmt(comment_address,currentComment,False)
                         else:
-                            set_cmt(int(comment,10),currentComment + "; " + changes["comments"][comment],False)
+                            set_cmt(comment_address,currentComment + "; " + changes["comments"][comment],False)
                     else:
-                        set_cmt(int(comment,10),changes["comments"][comment],False)
+                        set_cmt(comment_address,changes["comments"][comment],False)
             print("[*] Import completed!")
             info("CollaRE Import completed!")
         else:

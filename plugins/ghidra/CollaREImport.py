@@ -14,6 +14,8 @@ if ".collare_projects" in project_dir:
     base = changes["base"]
     if base != int(currentProgram.getImageBase().getOffset()):
         base = int(currentProgram.getImageBase().getOffset()) - base
+    else:
+        base = 0
     for function_address in changes["function_names"]:
         function = getFunctionAt(toAddr(int(function_address) + base))
         if function:

@@ -11,6 +11,8 @@ if ".collare_projects" in doc.getDatabaseFilePath():
             base = changes["base"]
             if base != int(doc.getSegment(0).getFileOffset()):
                 base = int(doc.getSegment(0).getFileOffset()) - base
+            else:
+                base = 0
             for comment in changes["comments"]:
                 comment_address = int(comment,10) + base
                 if seg.getCommentAtAddress(comment_address):

@@ -15,6 +15,8 @@ def import_changes(bv):
 		base = changes["base"]
 		if base != bv.start:
 			base = bv.start - base
+		else:
+			base = 0
 		for comment in changes["comments"]:
 			comment_address = int(comment,10) + base
 			if not changes["comments"][comment] in bv.get_comment_at(comment_address):

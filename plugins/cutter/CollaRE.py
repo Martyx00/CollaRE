@@ -23,10 +23,10 @@ class CollaREExport(cutter.CutterPlugin):
         pass
 
     def collare_export(self):
-        # TODO check if collare project
         project_path = cutter.cmd("e prj.file")
         if ".collare_projects" in project_path:
-            changes = {"function_names":{},"comments":{}}
+            base_addr = int(json.loads(cutter.cmd("iSj"))[0]["vaddr"])
+            changes = {"function_names":{},"comments":{},"base":base_addr}
             functions = cutter.cmd("afij @@F")
             functions = functions.replace("]\n[",",")
             functions = json.loads(functions)
@@ -62,19 +62,23 @@ class CollaREExport(cutter.CutterPlugin):
         if ".collare_projects" in project_path:
             with open(os.path.join(os.path.dirname(project_path),"changes.json"),"r") as changes_file:
                 changes = json.load(changes_file)
+                base = changes["base"]
+                if base != int(json.loads(cutter.cmd("iSj"))[0]["vaddr"]):
+                    base = int(json.loads(cutter.cmd("iSj"))[0]["vaddr"]) - base
                 for comment in changes["comments"]:
-                    current_comment = self.get_comment_at(int(comment,10))
+                    comment_address = int(comment,10) + base
+                    current_comment = self.get_comment_at(comment_address)
                     if current_comment:
-                        if self.get_comment_at(int(comment,10)) in changes["comments"][comment]:
-                            self.set_comment_at(int(comment,10),changes["comments"][comment])
+                        if self.get_comment_at(comment_address) in changes["comments"][comment]:
+                            self.set_comment_at(comment_address,changes["comments"][comment])
                         elif changes["comments"][comment] in current_comment:
                             pass
                         else:
-                            self.set_comment_at(int(comment,10),current_comment + "; " + changes["comments"][comment])
+                            self.set_comment_at(comment_address,current_comment + "; " + changes["comments"][comment])
                     else:
-                        self.set_comment_at(int(comment,10),changes["comments"][comment])
+                        self.set_comment_at(comment_address,changes["comments"][comment])
                 for function in changes["function_names"]:
-                    self.rename_function(int(function,10),changes["function_names"][function]["name"])
+                    self.rename_function(int(function,10) + base,changes["function_names"][function]["name"])
             QMessageBox.information(self.main, "CollaRE", "Import Done!", QMessageBox.Ok)
         else:
             QMessageBox.warning(self.main, "CollaRE", "Not a CollaRE project!", QMessageBox.Ok)
