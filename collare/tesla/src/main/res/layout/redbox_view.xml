@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:background="#1a1a1a" android:layout_width="match_parent" android:layout_height="match_parent">
+    <ListView android:id="@+id/rn_redbox_stack" android:layout_width="match_parent" android:layout_height="0dp" android:divider="@null" android:dividerHeight="0dp" android:layout_weight="1"/>
+    <View android:id="@+id/rn_redbox_line_separator" android:background="@android:color/darker_gray" android:visibility="gone" android:layout_width="match_parent" android:layout_height="1dp"/>
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <ProgressBar android:id="@+id/rn_redbox_loading_indicator" android:paddingLeft="16dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="match_parent" android:indeterminateOnly="true" style="@style/Widget.ProgressBar.Small"/>
+        <TextView android:textSize="14sp" android:textColor="@android:color/white" android:id="@+id/rn_redbox_report_label" android:paddingLeft="16dp" android:paddingTop="16dp" android:paddingRight="16dp" android:paddingBottom="16dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:lineSpacingExtra="4dp" android:fontFamily="monospace"/>
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:background="@drawable/redbox_top_border_background" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <Button android:id="@+id/rn_redbox_dismiss_button" android:text="@string/catalyst_dismiss_button" style="@style/redboxButton"/>
+        <Button android:id="@+id/rn_redbox_reload_button" android:text="@string/catalyst_reload_button" style="@style/redboxButton"/>
+        <Button android:id="@+id/rn_redbox_copy_button" android:text="@string/catalyst_copy_button" style="@style/redboxButton"/>
+        <Button android:id="@+id/rn_redbox_report_button" android:visibility="gone" android:text="@string/catalyst_report_button" style="@style/redboxButton"/>
+    </LinearLayout>
+</LinearLayout>

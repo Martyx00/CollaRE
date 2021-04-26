@@ -12,7 +12,7 @@ import os, requests, json, re, base64, shutil, sys, time
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
 connected = False
-supported_db_names = ["bndb","i64","idb","hop","rzdb","ghdb","jdb2"]
+supported_db_names = ["bndb","i64","idb","hop","rzdb","ghdb","jdb2","asp"]
 
 class ProjectTree(QTreeWidget):
     def __init__(self, parent):
@@ -304,6 +304,15 @@ class Ui_Dialog(object):
             Popen([f"ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "ida32":
             Popen([f"ida",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+        elif tool == "asp":
+            # TODO
+            progress = self.showProgressBox("Generating Android Studio Project")
+            process = Popen([f"jadx","-d",file_path.replace("\\","\\\\")[:-4],"-e",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            output, err = process.communicate()
+            progress.close()
+            with ZipFile(os.path.join(file_path+".asp"), 'w') as zipObj:
+                self.addFolderToZip(zipObj,file_path[:-4],os.path.dirname(file_path))
+            self.showPopupBox("Android Studio Project Created","Automatic project creation was successful!\nPush local databases.",QMessageBox.Information)
         elif tool == "jeb":
             if os.name == "nt":
                 jeb = "jeb.bat"
@@ -378,6 +387,7 @@ class Ui_Dialog(object):
                 open_hop = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","hop.png")),"Hopper Disassembler")
                 open_ghidra = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","ghdb.png")),"Ghidra")
                 open_jeb = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","jdb2.png")),"JEB")
+                open_asp = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","asp.png")),"Android Studio Project (JADX decompiler)")
                 self.menu.addSection("File operations")
                 push_all = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","upload.png")),"Push Local DBs")
                 delete_file = self.menu.addAction(QIcon(os.path.join(current_running_file_dir,"icons","delete.png")),"Delete File")
@@ -397,6 +407,8 @@ class Ui_Dialog(object):
                         open_ghidra.setEnabled(False)
                     if "jdb2" in disabled_tool:
                         open_jeb.setEnabled(False)
+                    if "asp" in disabled_tool:
+                        open_asp.setEnabled(False)
                 # Enable/Disable tools based on PATH
                 if not self.which("ida64"):
                     open_ida.setEnabled(False)
@@ -410,6 +422,8 @@ class Ui_Dialog(object):
                     open_ghidra.setEnabled(False)
                 if not self.which("jeb"):
                     open_jeb.setEnabled(False)
+                if not self.which("android-studio") or ".apk" not in clickedItem.text(0).lower():
+                    open_asp.setEnabled(False)
             else:
                 # Right click on one of the DB files
                 self.menu.addSection("File operations")
@@ -482,6 +496,8 @@ class Ui_Dialog(object):
                 self.processIn("ghidra",self.getPathToRoot(clickedItem))
             elif performed_action.text() == "JEB":
                 self.processIn("jeb",self.getPathToRoot(clickedItem))
+            elif performed_action.text() == "Android Studio Project (JADX decompiler)":
+                self.processIn("asp",self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Push Local DBs":
                 self.pushLocal(self.getPathToRoot(clickedItem))
             elif performed_action.text() == "Check-out":
@@ -728,8 +744,19 @@ class Ui_Dialog(object):
             if path[-1] == "ghdb":
                 destination = os.path.join(str(collare_home),*path[:-1])
                 file_path = os.path.join(destination,filename)
-                shutil.rmtree(file_path[:-4] + "rep")
+                try:
+                    shutil.rmtree(file_path[:-4] + "rep")
+                except:
+                    pass
                 shutil.unpack_archive(file_path, destination, "zip")  
+            if path[-1] == "asp":
+                destination = os.path.join(str(collare_home),*path[:-1])
+                file_path = os.path.join(destination,filename)
+                try:
+                    shutil.rmtree(file_path[:-8])
+                except:
+                    pass
+                shutil.unpack_archive(file_path, destination, "zip") 
         destination = os.path.join(str(collare_home),*path[:-1])
         file_path = os.path.join(destination,filename)
         if path[-1] == "bndb":
@@ -738,7 +765,24 @@ class Ui_Dialog(object):
         elif path[-1] == "hop":
             Popen(['Hopper', '-d',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
+            # download binary as well
+            data = {
+            "project": self.currentProject,
+            "path": path[:-2],
+            "file_name": path[-2]
+            }
+            bin_file_response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert)
+            if bin_file_response.status_code != 200:
+                self.showPopupBox("Error Donwloading File","Something went horribly wrong!",QMessageBox.Critical)
+            bin_file_response_data = bin_file_response.json()
+            bin_destination = os.path.join(str(collare_home),*path[:-1])
+            bin_file_path = os.path.join(bin_destination,path[-2])
+            with open(bin_file_path,"wb") as dest_file:
+                dest_file.write(base64.b64decode(bin_file_response_data['file']))
             Popen([f'Cutter',"-p", file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
+        elif path[-1] == "asp":
+            # TODO proper command
+            Popen(['android-studio',os.path.join(destination,filename.replace(".apk.asp","")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "idb":
@@ -790,7 +834,29 @@ class Ui_Dialog(object):
         elif path[-1] == "hop":
             Popen(["Hopper", "-d",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "rzdb":
+            # download binary as well
+            data = {
+            "project": self.currentProject,
+            "path": path[:-2],
+            "file_name": path[-2]
+            }
+            bin_file_response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert)
+            if bin_file_response.status_code != 200:
+                self.showPopupBox("Error Donwloading File","Something went horribly wrong!",QMessageBox.Critical)
+            bin_file_response_data = bin_file_response.json()
+            bin_destination = os.path.join(str(collare_home),*path[:-1])
+            bin_file_path = os.path.join(bin_destination,path[-2])
+            with open(bin_file_path,"wb") as dest_file:
+                dest_file.write(base64.b64decode(bin_file_response_data['file']))
             Popen(["Cutter","-p",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
+        elif path[-1] == "asp":
+            # TODO proper command
+            try:
+                shutil.rmtree(file_path[:-8])
+            except:
+                pass
+            shutil.unpack_archive(file_path, destination, "zip") 
+            Popen(['android-studio',os.path.join(destination,filename.replace(".apk.asp","")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen(["ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "idb":
@@ -806,7 +872,10 @@ class Ui_Dialog(object):
                 ghidraRun = "ghidraRun.bat"
             else:
                 ghidraRun = "ghidraRun"
-            shutil.rmtree(file_path[:-4] + "rep")
+            try:
+                shutil.rmtree(file_path[:-4] + "rep")
+            except:
+                pass
             shutil.unpack_archive(file_path, destination, "zip")  
             Popen([ghidraRun,os.path.join(destination,filename.replace('ghdb','gpr')).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         self.refreshProject()
@@ -829,6 +898,11 @@ class Ui_Dialog(object):
                 with ZipFile(os.path.join(containing_folder,filename), 'w') as zipObj:
                     zipObj.write(gpr_path,os.path.basename(gpr_path))
                     self.addFolderToZip(zipObj,gpr_path.replace("gpr","rep"),os.path.dirname(gpr_path))
+            if path[-1] == "asp":
+                # TODO
+                project_folder = os.path.join(containing_folder,path[-2][:-4])
+                with ZipFile(os.path.join(containing_folder,filename), 'w') as zipObj:
+                    self.addFolderToZip(zipObj,project_folder,os.path.dirname(project_folder))
             with open(os.path.join(containing_folder,"changes.json"), "rb") as changes_file:
                 changes_content = base64.b64encode(changes_file.read()).decode("utf-8")
             with open(os.path.join(containing_folder,filename), "rb") as data_file:
@@ -1003,6 +1077,8 @@ class Ui_Dialog(object):
         if tool == "ghdb" and self.which("ghidraRun"):
             return True
         if tool == "jdb2" and self.which("jeb"):
+            return True
+        if tool == "asp" and self.which("android-studio"):
             return True
         return False
 
