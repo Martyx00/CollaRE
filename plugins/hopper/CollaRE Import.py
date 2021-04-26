@@ -33,7 +33,8 @@ if ".collare_projects" in doc.getDatabaseFilePath():
                 function_address = int(function,10) + base
                 if not seg.getProcedureAtAddress(function_address):
                     seg.markAsProcedure(function_address)
-                seg.setNameAtAddress(function_address,changes["function_names"][function]["name"])
+                function_name = changes["function_names"][function]["name"].encode("ascii", "ignore")
+                seg.setNameAtAddress(function_address,function_name)
     doc.message("Import completed!",["Ok"])
 else:
     doc.message("This is not a CollaRE project!",["Ok"])

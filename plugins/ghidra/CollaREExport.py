@@ -7,6 +7,30 @@
 
 import os, json
 
+
+def get_comments(address):
+    comment = ""
+    eolComment = getEOLComment(address)
+    preComment = getPreComment(address)
+    plateComment = getPlateComment(address)
+    postComment = getPostComment(address)
+    if eolComment:
+        comment += eolComment
+    if preComment:
+        if comment:
+            comment += "; "
+        comment += preComment
+    if plateComment:
+        if comment:
+            comment += "; "
+        comment += plateComment
+    if postComment:
+        if comment:
+            comment += "; "
+        comment += postComment
+    return comment
+
+
 changes = {"function_names":{},"comments":{},"base": int(currentProgram.getImageBase().getOffset())}
 project_dir = getProjectRootFolder().getProjectLocator().getLocation()
 if ".collare_projects" in project_dir:
@@ -22,7 +46,7 @@ if ".collare_projects" in project_dir:
     while current_instruction != None:
         address = current_instruction.getAddress()
         # Only works for PRE comments as doing it for everything would be insane mess
-        comment = getPreComment(address)
+        comment = get_comments(address)
         if comment:
             changes["comments"][str(address.getOffset())] = comment
         current_instruction = getInstructionAfter(current_instruction)

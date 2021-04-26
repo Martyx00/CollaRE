@@ -7,6 +7,35 @@
 
 import os, json
 
+def get_comments(address):
+    comment = ""
+    eolComment = getEOLComment(address)
+    preComment = getPreComment(address)
+    plateComment = getPlateComment(address)
+    postComment = getPostComment(address)
+    if eolComment:
+        comment += eolComment
+    if preComment:
+        if comment:
+            comment += "; "
+        comment += preComment
+    if plateComment:
+        if comment:
+            comment += "; "
+        comment += plateComment
+    if postComment:
+        if comment:
+            comment += "; "
+        comment += postComment
+    return comment
+
+def clear_comments(address):
+    setEOLComment(address,"")
+    setPreComment(address,"")
+    setPlateComment(address,"")
+    setPostComment(address,"")
+
+
 project_dir = getProjectRootFolder().getProjectLocator().getLocation()
 if ".collare_projects" in project_dir:
     with open(os.path.join(project_dir,"changes.json"),"r") as changes_file:
@@ -21,20 +50,18 @@ if ".collare_projects" in project_dir:
         if function:
             function.setName(changes["function_names"][function_address]["name"],ghidra.program.model.symbol.SourceType.USER_DEFINED)
     for comment in changes["comments"]:
-        address = toAddr(int(comment,10) + base) 
-        if getPreComment(address):
-            if getPreComment(address) in changes["comments"][comment]:
-                setPreComment(address,changes["comments"][comment])
-            elif changes["comments"][comment] in getPreComment(address):
-                pass
+        comment_address = toAddr(int(comment,10) + base)
+        current_comment = get_comments(comment_address)
+        clear_comments(comment_address)
+        if current_comment:
+            if current_comment in changes["comments"][comment]:
+                setPreComment(comment_address,changes["comments"][comment])
+            elif changes["comments"][comment] in current_comment:
+                setPreComment(comment_address,current_comment)
             else:
-                current_comment = getPreComment(address)
-                if current_comment:
-                    setPreComment(address,current_comment + "; " + changes["comments"][comment])
-                else:
-                    setPreComment(address,changes["comments"][comment])
+                setPreComment(comment_address,current_comment + "; " + changes["comments"][comment])
         else:
-            setPreComment(address,changes["comments"][comment])
+            setPreComment(comment_address,changes["comments"][comment])
 
     popup("[*] Import successful!")
 else:

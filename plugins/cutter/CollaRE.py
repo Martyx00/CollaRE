@@ -65,6 +65,8 @@ class CollaREExport(cutter.CutterPlugin):
                 base = changes["base"]
                 if base != int(json.loads(cutter.cmd("iSj"))[0]["vaddr"]):
                     base = int(json.loads(cutter.cmd("iSj"))[0]["vaddr"]) - base
+                else:
+                    base = 0
                 for comment in changes["comments"]:
                     comment_address = int(comment,10) + base
                     current_comment = self.get_comment_at(comment_address)

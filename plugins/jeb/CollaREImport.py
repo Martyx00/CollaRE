@@ -32,8 +32,6 @@ class CollaREImport(IScript):
                 comment_manager = unit.getCommentManager()
                 for comment in changes["comments"]:
                     comment_address = int(comment,10) + base
-                    print(comment_address)
-                    print(changes["comments"][comment])
                     if comment_manager.getComment(hex(comment_address)):
                         currentComment = comment_manager.getComment(hex(comment_address)).formatRaw()
                     else:
