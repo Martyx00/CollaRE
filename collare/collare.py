@@ -422,7 +422,7 @@ class Ui_Dialog(object):
                     open_ghidra.setEnabled(False)
                 if not self.which("jeb"):
                     open_jeb.setEnabled(False)
-                if not self.which("android-studio") or ".apk" not in clickedItem.text(0).lower() or ".jar" not in clickedItem.text(0).lower():
+                if not self.which("android-studio") or (".apk" not in clickedItem.text(0).lower() and ".jar" not in clickedItem.text(0).lower()):
                     open_asp.setEnabled(False)
             else:
                 # Right click on one of the DB files

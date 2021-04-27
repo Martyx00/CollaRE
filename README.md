@@ -55,6 +55,10 @@ To enable support for this tool add a files `ida64` and `ida` to your path (when
 To enable support for this tool add a file `ghidraRun` and `analyzeHeadless` (`.bat` for Windows) to your path (when you open `cmd`/`terminal` writing `ghidraRun` should start the application). Note that `analyzeHeadless` is in `support` folder in the Ghidra root directory so make sure to adjust PATH to accommodate both files.
 The process of initializing the database with Ghidra is a bit more complicated as there is no way that Ghidra will process file [without creating a project](https://github.com/NationalSecurityAgency/ghidra/issues/629). So to be able to push the Ghidra database (referred to as `ghdb`) you will be prompted to create a project manually whenever automatic processing fails (basically whenever the file you process is not ELF/PE) and then specify the path to the `gpr` file (sorry for that).
 
+### Android Studio
+
+As APK and JAR files are often encountered during the reverse engineering efforts the CollaRE tool also supports working with these types of files. To enable support for these tools it is necessary to make sure that files `android-studio` and `jadx` are in the path. The [JADX](https://github.com/skylot/jadx) tool is used to perform the decompilation of the JAR/APK file and the [Android Studio](https://developer.android.com/studio) is used to open the resulting files. Note that use of Android Studio is optional as you can alias any other tool that handles Gradle projects under `android-studio` command (such as IntelliJ IDEA).
+
 ## Usage
 
 After deploying the server side as mentioned in its own readme file, it is necessary to distribute the used certificate file to all users of the application as well as use the default `admin` account with `admin` password to create other user accounts (don't forget to change password of `admin` user) via the `Admin` tab. When the users are configured anyone can create their own projects and start working with the tool itself.
