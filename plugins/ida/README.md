@@ -2,7 +2,7 @@
 
 ## Installation
 
-Place the file `CollaRE.py` into the plugin folder valid for your system. TODO
+Place the file `CollaRE.py` into the plugin folder valid for your system.
 
 ## Usage
 
