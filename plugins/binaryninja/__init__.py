@@ -57,7 +57,6 @@ def export_changes(bv):
 		changes["comments"].update(function.comments)
 		# Avoid storing default names that contain function address
 		if hex(function.start)[2:] not in function.name:
-			# TODO replace "end" with basic block count????
 			changes["function_names"][function.start] = {"name":function.name,"end":function.highest_address}
 	with open(os.path.join(os.path.dirname(bv.file.filename),"changes.json"),"w") as changes_file:
 		json.dump(changes,changes_file)

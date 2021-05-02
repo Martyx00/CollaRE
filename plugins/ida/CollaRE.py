@@ -5,8 +5,6 @@ from idc import *
 import ida_nalt
 import os, json
 
-# TODO this has to also somehow work with hexrays comments
-
 def get_comment(ea):
     comment = ""
     repComment = get_cmt(ea, True)

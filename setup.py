@@ -3,7 +3,7 @@ from glob import glob
 
 setup(
     name='collare',
-    version='0.1',
+    version='1.0',
     packages = ['collare'],
     package_data = {'collare' : ["icons/*"] },
     entry_points={

@@ -1,5 +1,5 @@
 
-# CollaRE v0.3
+# CollaRE v1.0
 
 ![CollaRE](./collare/icons/collare-full-white.png)
 
@@ -7,7 +7,7 @@
 ## Intorduction
 
 CollareRE is a tool for collaborative reverse engineering that aims to allow teams that do need to use more then one tool during a project to collaborate without the need to share the files on a separate locations. It also contains a very simple user management and as such can be used for a multi-project servers where different teams work on different projects.
-The [back-end](https://github.com/Martyx00/CollaREServer) of the tool is a simple `Flask app` with `nginx` in front of it running in Docker that works with files and JSON based manifests that hold the relevant data. The front-end is a PyQT based GUI tool with a simple interface that allows managing the projects and working with the binary files and their corresponding reverse engineering databases. As of now the tool supports `Binary Ninja`, `Cutter (Rizin)`, `Ghidra`, `Hopper Dissassembler`, `IDA` and `JEB`. The implementation is abstracted from the inner workings of these tools as much as possible to avoid issues with any API changes and thus does not integrate directly into those tools in form of a plugin (might change in the future). The work is based purely on managing the files produced by these tools (literally just based on the well known file extensions) and a simple SVN style `check-out` and `check-in` operations.
+The [back-end](https://github.com/Martyx00/CollaREServer) of the tool is a simple `Flask app` with `nginx` in front of it running in Docker that works with files and JSON based manifests that hold the relevant data. The front-end is a PyQT based GUI tool with a simple interface that allows managing the projects and working with the binary files and their corresponding reverse engineering databases. As of now the tool supports `Binary Ninja`, `Cutter (Rizin)`, `Ghidra`, `Hopper Dissassembler`, `IDA`, `JEB` and `Android Studio (Decompiled by JADX)`. The implementation is abstracted from the inner workings of these tools as much as possible to avoid issues with any API changes and thus does not integrate directly into those tools in form of a plugin (might change in the future). The work is based purely on managing the files produced by these tools (literally just based on the well known file extensions) and a simple SVN style `check-out` and `check-in` operations.
 
 ## Installation
 
@@ -20,7 +20,7 @@ Type=Application
 Encoding=UTF-8
 Name=CollaRE
 Exec=/usr/local/bin/collare
-Icon=/usr/local/lib/python3.8/dist-packages/collare-0.1-py3.8.egg/collare/icons/collare.png
+Icon=/usr/local/lib/python3.8/dist-packages/collare-1.0-py3.8.egg/collare/icons/collare.png
 Terminal=false
 
 ```
@@ -29,26 +29,26 @@ Terminal=false
 
 ### Cutter (Rizin)
 
-To enable support for this tool add a file `Cutter` to your path (when you open `cmd`/`terminal` writing `Cutter` should start the application). 
+To enable support for [Cutter](https://cutter.re/) add a file `Cutter` to your path (when you open `cmd`/`terminal` writing `Cutter` should start the application). 
 When saving Cutter (rizin) projects you have to manually append `.rzdb`. Do not remove the extension that the file already has (`exe` or `so` for example).
 
 ### Binary Ninja
 
-To enable support for this tool add a file `binaryninja` to your path (when you open `cmd`/`terminal` writing `binaryninja` should start the application).
+To enable support for [Binary Ninja](https://binary.ninja/) add a file `binaryninja` to your path (when you open `cmd`/`terminal` writing `binaryninja` should start the application).
 Binary Ninja is removing file extensions by default, however the tool accounts for this so there is no need to put the original file extension back manually. Saving the projects as is in a default path is enough to be able to successfully push local `bndb` database.
 
 ### Hopper Disassembler
 
-To enable support for this tool add a file `Hopper` to your path (when you open `cmd`/`terminal` writing `Hopper` should start the application).
+To enable support for [Hopper Disassembler](https://www.hopperapp.com/) add a file `Hopper` to your path (when you open `cmd`/`terminal` writing `Hopper` should start the application).
 Hopper is removing file extensions by default, however the tool accounts for this so there is no need to put the original file extension back manually. Saving the projects simply with `Ctrl+S` is enough to be able to successfully push local `hop` database.
 
 ### JEB
 
-To enable support for this tool add a file `jeb` to your path (when you open `cmd`/`terminal` writing `jeb` should start the application). This can be done by renaming the default runner script file for your OS to `jeb` (for Windows this would actually be `jeb.bat`).
+To enable support for [JEB](https://www.pnfsoftware.com/) add a file `jeb` to your path (when you open `cmd`/`terminal` writing `jeb` should start the application). This can be done by renaming the default runner script file for your OS to `jeb` (for Windows this would actually be `jeb.bat`).
 
 ### IDA Pro
 
-To enable support for this tool add a files `ida64` and `ida` to your path (when you open `cmd`/`terminal` writing `ida64`/`ida` should start the application).
+To enable support for [IDA](https://www.hex-rays.com/ida-pro/) tool add a files `ida64` and `ida` to your path (when you open `cmd`/`terminal` writing `ida64`/`ida` should start the application).
 
 ### Ghidra
 
@@ -57,7 +57,7 @@ The process of initializing the database with Ghidra is a bit more complicated a
 
 ### Android Studio
 
-As APK and JAR files are often encountered during the reverse engineering efforts the CollaRE tool also supports working with these types of files. To enable support for these tools it is necessary to make sure that files `android-studio` and `jadx` are in the path. The [JADX](https://github.com/skylot/jadx) tool is used to perform the decompilation of the JAR/APK file and the [Android Studio](https://developer.android.com/studio) is used to open the resulting files. Note that use of Android Studio is optional as you can alias any other tool that handles Gradle projects under `android-studio` command (such as IntelliJ IDEA).
+As APK and JAR files are often encountered during the reverse engineering efforts the CollaRE tool also supports working with these types of files. To enable support for these tools it is necessary to make sure that files `android-studio` and `jadx` are both in the path (when you open `cmd`/`terminal` writing `android-studio`/`jadx` should start the application). The [JADX](https://github.com/skylot/jadx) tool is used to perform the decompilation of the JAR/APK file and the [Android Studio](https://developer.android.com/studio) is used to open the resulting files. Note that use of Android Studio is optional as you can alias any other tool that handles Gradle projects under `android-studio` command (such as IntelliJ IDEA).
 
 ## Usage
 
@@ -95,14 +95,7 @@ The tool also supports versioning the DB files in a way that every `Check-in` ac
 
 ### Plugins
 
-The plugins folder within this repository contains plugins for the supported tools which allow you to share comments and function names between the tools in case that you work on one binary with multiple tools. Follow the standard plugin installation instructions for the tool you are interested in. Each plugin offers an `Import` and an `Export` function. When you plan to share the data between the tools always make sure that you `Import` data first to avoid renaming functions that were already renamed by someone else. If the plugin comes with some catches, those are mentioned in the README file of the given plugin.
-
-## Roadmap
-
-* **v0.1** - Initial BETA release
-* **v0.2** - BETA release with DB files versioning support
-* **v0.3** - BETA release with comments/function names sync between DBs (PoC with two tools)
-* **v1.0** - Initial production ready release with all major features implemented
+The plugins folder within this repository contains plugins for the supported tools which allow you to share comments and function names between the tools in case that you work on one binary with multiple tools. Follow the standard plugin installation instructions for the tool you are interested in. Each plugin offers an `Import` and an `Export` function. When you plan to share the data between the tools always make sure that you `Import` data first to avoid renaming functions that were already renamed by someone else. If the plugin comes with some catches, those are mentioned in the README file of the given plugin. Note that the plugins server to migrate the data to other tool rather then for a simultaneous collaboration of multiple people.
 
 ## Disclaimer
 

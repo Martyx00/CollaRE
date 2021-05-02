@@ -2,7 +2,7 @@
 Author: **Martin Petran**
 _This plugin allows synchronization of data between different databases in CollaRE project._
 ## Description:
-This plugin allows synchronization of data between different databases in CollaRE project.
+This plugin allows synchronization of data between different databases in CollaRE project. See [CollaRE](https://github.com/Martyx00/CollaRE) for more information.
 
 ## Minimum Version
 

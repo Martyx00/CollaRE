@@ -305,7 +305,6 @@ class Ui_Dialog(object):
         elif tool == "ida32":
             Popen([f"ida",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "asp":
-            # TODO
             progress = self.showProgressBox("Generating Android Studio Project")
             process = Popen([f"jadx","-d",file_path.replace("\\","\\\\")[:-4],"-e",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
             output, err = process.communicate()
@@ -781,7 +780,6 @@ class Ui_Dialog(object):
                 dest_file.write(base64.b64decode(bin_file_response_data['file']))
             Popen([f'Cutter',"-p", file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "asp":
-            # TODO proper command
             Popen(['android-studio',os.path.join(destination,filename.replace(".apk.asp","").replace(".jar.asp","")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
             Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
@@ -850,7 +848,6 @@ class Ui_Dialog(object):
                 dest_file.write(base64.b64decode(bin_file_response_data['file']))
             Popen(["Cutter","-p",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif path[-1] == "asp":
-            # TODO proper command
             try:
                 shutil.rmtree(file_path[:-8])
             except:
@@ -899,7 +896,6 @@ class Ui_Dialog(object):
                     zipObj.write(gpr_path,os.path.basename(gpr_path))
                     self.addFolderToZip(zipObj,gpr_path.replace("gpr","rep"),os.path.dirname(gpr_path))
             if path[-1] == "asp":
-                # TODO
                 project_folder = os.path.join(containing_folder,path[-2][:-4])
                 with ZipFile(os.path.join(containing_folder,filename), 'w') as zipObj:
                     self.addFolderToZip(zipObj,project_folder,os.path.dirname(project_folder))
