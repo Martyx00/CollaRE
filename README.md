@@ -7,11 +7,11 @@
 ## Intorduction
 
 CollareRE is a tool for collaborative reverse engineering that aims to allow teams that do need to use more then one tool during a project to collaborate without the need to share the files on a separate locations. It also contains a very simple user management and as such can be used for a multi-project servers where different teams work on different projects.
-The [back-end](https://github.com/Martyx00/CollaREServer) of the tool is a simple `Flask app` with `nginx` in front of it running in Docker that works with files and JSON based manifests that hold the relevant data. The front-end is a PyQT based GUI tool with a simple interface that allows managing the projects and working with the binary files and their corresponding reverse engineering databases. As of now the tool supports `Binary Ninja`, `Cutter (Rizin)`, `Ghidra`, `Hopper Dissassembler`, `IDA`, `JEB` and `Android Studio (Decompiled by JADX)`. The implementation is abstracted from the inner workings of these tools as much as possible to avoid issues with any API changes and thus does not integrate directly into those tools in form of a plugin (might change in the future). The work is based purely on managing the files produced by these tools (literally just based on the well known file extensions) and a simple SVN style `check-out` and `check-in` operations.
+The [back-end](https://github.com/Martyx00/CollaREServer) of the tool is a simple `Flask app` with `nginx` in front of it running in Docker that works with files and JSON based manifests that hold the relevant data. The front-end is a PyQT based GUI tool with a simple interface that allows managing the projects and working with the binary files and their corresponding reverse engineering databases. As of now the tool supports `Binary Ninja`, `Cutter (Rizin)`, `Ghidra`, `Hopper Dissassembler`, `IDA`, `JEB` and `Android Studio (Decompiled by JADX)`. The implementation is abstracted from the inner workings of these tools as much as possible to avoid issues with any API changes and thus does not integrate directly into those tools in form of a plugin (except for data migration plugins described below). The work is based purely on managing the files produced by these tools (literally just based on the well known file extensions) and a simple SVN style `check-out` and `check-in` operations.
 
 ## Installation
 
-Download/clone this repository and run `sudo python3 setup.py install`. On Linux this will install the tool to the `PATH` and you will be able to run it simply with `collare` command. On Windows this will put the file into the `C:\Users\<USERNAME>\AppData\Local\Programs\Python\<PYTHON_VERSION>\Scripts\collare.exe` (depending on how you installed Python).
+Grab the latest release from this repository and run `sudo python3 setup.py install` on Linux or use command line on Windows and run `python3 setup.py install`. On Linux this will install the tool to the `PATH` and you will be able to run it simply with `collare` command. On Windows this will put the file into the `C:\Users\<USERNAME>\AppData\Local\Programs\Python\<PYTHON_VERSION>\Scripts\collare.exe` (depending on how you installed Python).
 
 For Gnome based desktop UIs you can use following desktop file (paths to files may vary):
 ```
@@ -52,7 +52,7 @@ To enable support for [IDA](https://www.hex-rays.com/ida-pro/) tool add a files 
 
 ### Ghidra
 
-To enable support for this tool add a file `ghidraRun` and `analyzeHeadless` (`.bat` for Windows) to your path (when you open `cmd`/`terminal` writing `ghidraRun` should start the application). Note that `analyzeHeadless` is in `support` folder in the Ghidra root directory so make sure to adjust PATH to accommodate both files.
+To enable support for this tool add a file `ghidraRun` and `analyzeHeadless` (`.bat` for Windows) to your path (when you open `cmd`/`terminal` writing `ghidraRun` should start the application). Note that `analyzeHeadless` is in `support` folder in the Ghidra root directory so make sure to adjust `PATH` to accommodate both files.
 The process of initializing the database with Ghidra is a bit more complicated as there is no way that Ghidra will process file [without creating a project](https://github.com/NationalSecurityAgency/ghidra/issues/629). So to be able to push the Ghidra database (referred to as `ghdb`) you will be prompted to create a project manually whenever automatic processing fails (basically whenever the file you process is not ELF/PE) and then specify the path to the `gpr` file (sorry for that).
 
 ### Android Studio
@@ -95,8 +95,4 @@ The tool also supports versioning the DB files in a way that every `Check-in` ac
 
 ### Plugins
 
-The plugins folder within this repository contains plugins for the supported tools which allow you to share comments and function names between the tools in case that you work on one binary with multiple tools. Follow the standard plugin installation instructions for the tool you are interested in. Each plugin offers an `Import` and an `Export` function. When you plan to share the data between the tools always make sure that you `Import` data first to avoid renaming functions that were already renamed by someone else. If the plugin comes with some catches, those are mentioned in the README file of the given plugin. Note that the plugins server to migrate the data to other tool rather then for a simultaneous collaboration of multiple people.
-
-## Disclaimer
-
-I am not a good developer and I am even worse UI designer.
+The [plugins](https://github.com/Martyx00/CollaRE/tree/master/plugins) folder within this repository contains plugins for the supported tools which allow you to share comments and function names between the tools in case that you work on one binary with multiple tools. Follow the standard plugin installation instructions for the tool you are interested in. Each plugin offers an `Import` and an `Export` function. When you plan to share the data between the tools always make sure that you `Import` data first to avoid renaming functions that were already renamed by someone else. If the plugin comes with some catches, those are mentioned in the README file of the given plugin. Note that the plugins are intended to migrate the data to other tool rather then for a simultaneous collaboration of multiple people.
