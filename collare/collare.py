@@ -70,7 +70,7 @@ class ProjectTree(QTreeWidget):
             encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
         values = {'path': remotePath,"project":self.projectName,"file":encoded_file,"file_name":os.path.basename(fsPath)}
         try:
-            response = requests.post(f'{self.server}/push', json=values, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.post(f'{self.server}/push', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             if response.status_code != 200:
                 self.showPopupBox("Error Uploading File","Something went horribly wrong!",QMessageBox.Critical)
             elif response.text == "FILE_ALREADY_EXISTS":
@@ -112,7 +112,7 @@ class ProjectTree(QTreeWidget):
             "dirname": dirname
         }
         try:
-            response = requests.post(f'{self.server}/mkdir', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.post(f'{self.server}/mkdir', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             if response.status_code != 200:
                 self.showPopupBox("Error Creating Folder","Something went horribly wrong!",QMessageBox.Critical)
             elif response.text == "FOLDER_ALREADY_EXISTS":
@@ -293,7 +293,7 @@ class Ui_Dialog(object):
             "file_name": path[-1]
         }
         try:
-            response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -549,7 +549,7 @@ class Ui_Dialog(object):
                 "dirname": dirname
             }
             try:
-                response = requests.post(f'{self.server}/rename', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.post(f'{self.server}/rename', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -578,7 +578,7 @@ class Ui_Dialog(object):
                         db_file = filename + f".{filename_extension}"
                 values = {'path': path,"project":self.currentProject,"file":encoded_file,"file_name":db_file}
                 try:
-                    response = requests.post(f'{self.server}/pushdbfile', json=values, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                    response = requests.post(f'{self.server}/pushdbfile', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
                 except:
                     self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                     return
@@ -595,7 +595,7 @@ class Ui_Dialog(object):
             self.showPopupBox("Error","No project selected!",QMessageBox.Critical)
             return
         try:
-            response = requests.get(f'{self.server}/openproject', params={"project":selectedProject}, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.get(f'{self.server}/openproject', params={"project":selectedProject}, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -628,7 +628,7 @@ class Ui_Dialog(object):
         answer = questionBox.question(self,"Deleting project", f"Are you sure that you want to delete '{selectedProject}' project?", questionBox.Yes | questionBox.No)
         if answer == questionBox.Yes:
             try:
-                response = requests.get(f'{self.server}/deleteproject', params={"project":selectedProject}, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.get(f'{self.server}/deleteproject', params={"project":selectedProject}, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -654,7 +654,7 @@ class Ui_Dialog(object):
             user_list.append(self.username)
         data={"project":projectName,"users":user_list}
         try:
-            response = requests.post(f'{self.server}/createproject', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.post(f'{self.server}/createproject', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -690,7 +690,7 @@ class Ui_Dialog(object):
                 "dirname": dirname
             }
             try:
-                response = requests.post(f'{self.server}/mkdir', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.post(f'{self.server}/mkdir', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -714,7 +714,7 @@ class Ui_Dialog(object):
                 "dirname": path[-1]
             }
             try:
-                response = requests.post(f'{self.server}/deletedir', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.post(f'{self.server}/deletedir', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -738,7 +738,7 @@ class Ui_Dialog(object):
             "file_name": filename
         }
         try:
-            response = requests.post(f'{self.server}/undocheckout', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.post(f'{self.server}/undocheckout', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -770,7 +770,7 @@ class Ui_Dialog(object):
             "version": version
         }
         try:
-            response = requests.post(f'{self.server}/opendbfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.post(f'{self.server}/opendbfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -819,7 +819,7 @@ class Ui_Dialog(object):
             "file_name": path[-2]
             }
             try:
-                bin_file_response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                bin_file_response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -863,7 +863,7 @@ class Ui_Dialog(object):
             "version": version
         }
         try:
-            response = requests.post(f'{self.server}/checkout', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.post(f'{self.server}/checkout', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -895,7 +895,7 @@ class Ui_Dialog(object):
             "file_name": path[-2]
             }
             try:
-                bin_file_response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                bin_file_response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -965,7 +965,7 @@ class Ui_Dialog(object):
                 encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
             values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename,"checkout":checkout,"comment":comment,"changes":changes_content}
             try:
-                response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -989,7 +989,7 @@ class Ui_Dialog(object):
                 "filename": path[-1]
             }
             try:
-                response = requests.post(f'{self.server}/deletefile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.post(f'{self.server}/deletefile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -1009,7 +1009,7 @@ class Ui_Dialog(object):
 
     def refreshProject(self):
         # Refershes the view of the project
-        response = requests.get(f'{self.server}/openproject', params={"project":self.currentProject}, auth=(self.username, self.password), verify=self.cert, timeout=40)
+        response = requests.get(f'{self.server}/openproject', params={"project":self.currentProject}, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         if response.status_code != 200:
             self.showPopupBox("Error Refershing Project Data","Something went horribly wrong!",QMessageBox.Critical)
         else:
@@ -1027,7 +1027,7 @@ class Ui_Dialog(object):
             self.showPopupBox("Password Change Error","Passwords don't match!",QMessageBox.Critical)
             return
         try:
-            response = requests.post(f'{self.server}/changepwd', data=req_data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.post(f'{self.server}/changepwd', data=req_data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -1046,7 +1046,7 @@ class Ui_Dialog(object):
             self.showPopupBox("Cannot create user","Make sure to fill in all fields!",QMessageBox.Critical)
             return
         try:
-            response = requests.post(f'{self.server}/adduser', data=req_data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.post(f'{self.server}/adduser', data=req_data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -1058,7 +1058,7 @@ class Ui_Dialog(object):
 
     def populateAllUserListings(self):
         try:
-            response = requests.get(f'{self.server}/getusers', auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.get(f'{self.server}/getusers', auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -1075,7 +1075,7 @@ class Ui_Dialog(object):
     
     def populateCurrentProjectUserListing(self):
         try:
-            response = requests.get(f'{self.server}/getprojectusers', params={"project":self.currentProject}, auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.get(f'{self.server}/getprojectusers', params={"project":self.currentProject}, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -1088,7 +1088,7 @@ class Ui_Dialog(object):
 
     def populateExistingProjects(self):
         try:
-            response = requests.get(f'{self.server}/getprojectlist', auth=(self.username, self.password), verify=self.cert, timeout=40)
+            response = requests.get(f'{self.server}/getprojectlist', auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
             return
@@ -1115,7 +1115,7 @@ class Ui_Dialog(object):
         if user_list:
             data = {"project":self.currentProject,"users":user_list}
             try:
-                response = requests.post(f'{self.server}/addprojectusers', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.post(f'{self.server}/addprojectusers', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -1131,7 +1131,7 @@ class Ui_Dialog(object):
         if user_list:
             data = {"project":self.currentProject,"users":user_list}
             try:
-                response = requests.post(f'{self.server}/deleteprojectuser', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.post(f'{self.server}/deleteprojectuser', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -1150,7 +1150,7 @@ class Ui_Dialog(object):
         if user_list:
             data = {"users":user_list}
             try:
-                response = requests.post(f'{self.server}/deluser', json=data, auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.post(f'{self.server}/deluser', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
                 return
@@ -1237,7 +1237,7 @@ class Ui_Dialog(object):
                 self.showPopupBox("Cannot Initiate Connection","Please make sure that all fields are filled!",QMessageBox.Critical)
                 return
             try:
-                response = requests.get(f'{self.server}/ping', auth=(self.username, self.password), verify=self.cert, timeout=40)
+                response = requests.get(f'{self.server}/ping', auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
             except:
                 self.showPopupBox("Cannot Initiate Connection","Connection not successful! Check provided data and try again!",QMessageBox.Critical)
                 return
