@@ -93,6 +93,8 @@ When you just want to inspect the file you can right-click the desired DB file a
 
 The tool also supports versioning the DB files in a way that every `Check-in` action counts as a new version of the DB file. You will be prompted to insert a comment for the version which is used to give more context to the changes that are applied in that version. It is then possible to open or check-out the previous versions of the files and work on those.
 
+![CollaRE](./images/versioning.gif)
+
 ### Plugins
 
 The [plugins](https://github.com/Martyx00/CollaRE/tree/master/plugins) folder within this repository contains plugins for the supported tools which allow you to share comments and function names between the tools in case that you work on one binary with multiple tools. Follow the standard plugin installation instructions for the tool you are interested in. Each plugin offers an `Import` and an `Export` function. When you plan to share the data between the tools always make sure that you `Import` data first to avoid renaming functions that were already renamed by someone else. If the plugin comes with some catches, those are mentioned in the README file of the given plugin. Note that the plugins are intended to migrate the data to other tool rather then for a simultaneous collaboration of multiple people.
