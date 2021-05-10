@@ -35,8 +35,6 @@ def import_changes(bv):
 						function.set_comment_at(comment_address,current_comment + "; "+ changes["comments"][comment])
 		for function in changes["function_names"]:
 			function_address = int(function,10) + base
-			if not bv.get_function_at(function_address):
-				bv.create_user_function(function_address)
 			if bv.get_function_at(function_address):
 				bv.get_function_at(function_address).name = changes["function_names"][function]["name"]
 	show_message_box("CollaRE Import", "Import successful!", buttons=0, icon=0)

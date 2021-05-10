@@ -13,13 +13,13 @@ collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
 connected = False
 supported_db_names = ["bndb","i64","idb","hop","rzdb","ghdb","jdb2","asp"]
+requests.urllib3.disable_warnings()
 
 class ProjectTree(QTreeWidget):
     def __init__(self, parent):
         super(ProjectTree, self).__init__(parent)
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
-        self.previousHighlight = None
 
     def setProjectData(self,server,projectName,username,password,cert,parent):
         self.server = server
@@ -32,28 +32,28 @@ class ProjectTree(QTreeWidget):
     def dragEnterEvent(self, event):
         event.accept()
 
+    def deselectAll(self):
+        for item in self.selectedItems():
+            item.setSelected(False)
+
     def dragMoveEvent(self, event):
         event.accept()
+        #if event.mimeData().hasUrls():
         item = self.itemAt(event.pos())
-        if item and item != self.previousHighlight: # Not none
+        if item: # Not none
             if item.whatsThis(0) == "binary":
                 # Highlight parent folder
+                self.deselectAll()
                 item.parent().setSelected(True)
-                if self.previousHighlight and self.previousHighlight != item.parent():
-                    self.previousHighlight.setSelected(False)
-                self.previousHighlight = item.parent()
             elif item.whatsThis(0) == "folder":
                 # Highlight current folder
+                self.deselectAll()
                 item.setSelected(True)
-                if self.previousHighlight:
-                    self.previousHighlight.setSelected(False)
-                self.previousHighlight = item
             else:
                 # Higlight parent of parent (for cases where we hover over DB files listing)
+                self.deselectAll()
                 item.parent().parent().setSelected(True)
-                if self.previousHighlight and self.previousHighlight != item.parent().parent():
-                    self.previousHighlight.setSelected(False)
-                self.previousHighlight = item.parent().parent()
+
 
     def showPopupBox(self,title,text,icon):
         msg = QMessageBox(self)
@@ -131,7 +131,8 @@ class ProjectTree(QTreeWidget):
         return path
 
     def dropEvent(self, event):
-        if event.mimeData().hasUrls:
+        # External source
+        if event.mimeData().hasUrls():
             for url in event.mimeData().urls():
                 # Folders currently not supported
                 if os.name == 'nt':
@@ -153,6 +154,45 @@ class ProjectTree(QTreeWidget):
                         self.uploadDir(url_path,self.getPathToRoot(item))
                     else:
                         self.uploadFile(url_path,self.getPathToRoot(item))
+        else:
+            # Internal drag and drop
+            source_item = event.source().currentItem()
+            dest_item = self.itemAt(event.pos())
+            if dest_item:
+                # Adjust target of the drop event based on where we are
+                if dest_item.whatsThis(0) != "folder":
+                    if dest_item.parent().whatsThis(0) == "folder":
+                        dest_item = dest_item.parent()
+                    elif dest_item.parent().whatsThis(0) == "binary":
+                        dest_item = dest_item.parent().parent()
+                    else:
+                        dest_item = dest_item.parent().parent().parent()
+                if len(self.getPathToRoot(dest_item)) > 0:
+                    if source_item.whatsThis(0) == "folder" or source_item.whatsThis(0) == "binary":
+                        print(self.getPathToRoot(dest_item))
+                        data = {
+                            "project_name": self.projectName,
+                            "source_path": self.getPathToRoot(source_item),
+                            "dest_path": self.getPathToRoot(dest_item) if len(self.getPathToRoot(dest_item)) > 0 else [self.projectName]
+                        }
+                        try:
+                            response = requests.post(f'{self.server}/move', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
+                        except:
+                            self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
+                            return
+                        if response.text == "DONE":
+                            #if os.path.exists(os.path.join(str(collare_home),*self.getPathToRoot(source_item))):
+                                #shutil.move(os.path.join(str(collare_home),*self.getPathToRoot(source_item)),os.path.join(str(collare_home),*self.getPathToRoot(dest_item)))
+                            self.parent.refreshProject()
+                        elif response.text == "CHECKEDOUT_FILE":
+                            self.showPopupBox("Cannot move DB item","One of the items intended to move are checked-out.",QMessageBox.Critical)
+                            return
+                        elif response.text == "ALREADY_EXISTS":
+                            self.showPopupBox("Cannot move DB item","Item with this name already exists in destination.",QMessageBox.Critical)
+                            return
+                    else:
+                        self.showPopupBox("Cannot move DB item","Only binaries and folders can be moved within the project tree. Not the individual DBs.",QMessageBox.Critical)
+
 
 
 class Ui_Dialog(object):
@@ -977,9 +1017,6 @@ class Ui_Dialog(object):
 
     def deleteFile(self,path):
         # Removes any file from the server (and local) storage
-        if len(path) == 1:
-            self.showPopupBox("Error Deleting Folder","Cannot delete project root!",QMessageBox.Critical)
-            return
         questionBox = QMessageBox()
         answer = questionBox.question(self,"Deleting File", f"Are you sure that you want to delete '{path[-1]}' file?", questionBox.Yes | questionBox.No)
         if answer == questionBox.Yes:
@@ -1400,6 +1437,7 @@ class Ui_Dialog(object):
         self.projectTreeView.customContextMenuRequested.connect(self.rightClickMenuHandle)  
         self.projectTreeView.setHeaderItem(QTreeWidgetItem(["File","Status"]))
         self.projectTreeView.setColumnWidth(0,500)
+        self.projectTreeView.setDragEnabled(True)
         projectLayout.addWidget(self.projectTreeView)
 
         self.projectTreeView.setObjectName("projectTreeView")
