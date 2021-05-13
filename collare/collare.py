@@ -169,7 +169,6 @@ class ProjectTree(QTreeWidget):
                         dest_item = dest_item.parent().parent().parent()
                 if len(self.getPathToRoot(dest_item)) > 0:
                     if source_item.whatsThis(0) == "folder" or source_item.whatsThis(0) == "binary":
-                        print(self.getPathToRoot(dest_item))
                         data = {
                             "project_name": self.projectName,
                             "source_path": self.getPathToRoot(source_item),
@@ -878,7 +877,7 @@ class Ui_Dialog(object):
         elif path[-1] == "idb":
             Popen([f'ida',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "jdb2":
-            print(file_path)
+
             # has to be jeb.bat for windows
             if os.name == "nt":
                 jeb = "jeb.bat"
