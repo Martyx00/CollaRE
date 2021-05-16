@@ -284,7 +284,9 @@ class Ui_Dialog(object):
         self.connectButton.setText("Connect")
         self.adminTab.setEnabled(False)
         self.newProjectFrame.setEnabled(False)
-        self.existingProjectFrame.setEnabled(False)       
+        self.existingProjectFrame.setEnabled(False)     
+        self.frame_6.setEnabled(False)
+        self.projectTab.setEnabled(False)
         #self.projectTab.setEnabled(False)
 
     def getPathToRoot(self,treeItem):
@@ -1070,7 +1072,7 @@ class Ui_Dialog(object):
         if response.status_code != 200:
             self.showPopupBox("Error Changing Password","Something went horribly wrong!",QMessageBox.Critical)
         else:
-            self.showPopupBox("Password Changed",f"Password for user '{self.username}' was changed!",QMessageBox.Information)
+            self.showPopupBox("Password Changed",f"Password for user '{self.username}' was changed! Please disconnect and connect again with the new password!",QMessageBox.Information)
 
 
     def addNewGlobalUserClickHandler(self):
