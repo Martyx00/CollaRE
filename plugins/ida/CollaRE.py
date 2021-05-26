@@ -70,7 +70,6 @@ class CollaREImportAction(idaapi.action_handler_t):
     def __init__(self):
         idaapi.action_handler_t.__init__(self)
 
-    # Say hello when invoked.
     def activate(self, ctx):
         if ".collare_projects" in ida_nalt.get_input_file_path():
             with open(os.path.join(os.path.dirname(ida_nalt.get_input_file_path()),"changes.json"),"r") as changes_file:
@@ -117,29 +116,27 @@ class collare_t(idaapi.plugin_t):
     flags = idaapi.PLUGIN_KEEP
 
     def init(self):
-        # 2) Describe the action
         export_desc = idaapi.action_desc_t(
-            'collare:export',   # The action name. This acts like an ID and must be unique
-            'CollaRE Export',  # The action text.
-            CollaREExportAction(),   # The action handler.
-            '',      # Optional: the action shortcut
-            'Export function names and comments for CollaRE projects.'  # Optional: the action tooltip (available in menus/toolbar)
-            )           # Optional: the action icon (shows when in menus/toolbars)
-        # 3) Register the action
+            'collare:export',
+            'CollaRE Export',
+            CollaREExportAction(),
+            '',
+            'Export function names and comments for CollaRE projects.'
+            )
+        
         idaapi.register_action(export_desc)
         idaapi.attach_action_to_menu("File/Save as...", "collare:export", idaapi.SETMENU_APP)
         import_desc = idaapi.action_desc_t(
-            'collare:import',   # The action name. This acts like an ID and must be unique
-            'CollaRE Import',  # The action text.
-            CollaREImportAction(),   # The action handler.
-            '',      # Optional: the action shortcut
-            'Import function names and comments for CollaRE projects.'  # Optional: the action tooltip (available in menus/toolbar)
-            )           # Optional: the action icon (shows when in menus/toolbars)
-        # 3) Register the action
+            'collare:import',
+            'CollaRE Import',
+            CollaREImportAction(),
+            '',
+            'Import function names and comments for CollaRE projects.'
+            )           
+        
         idaapi.register_action(import_desc)
         idaapi.attach_action_to_menu("File/Save as...", "collare:import", idaapi.SETMENU_APP)
-        #idaapi.attach_action_to_menu("Edit/Plugins/CollaRE Import", self.collare_import(), 0)
-
+        
     def run(self):
         pass
 
