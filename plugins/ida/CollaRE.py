@@ -56,10 +56,10 @@ class CollaREExportAction(idaapi.action_handler_t):
                     json.dump(changes,changes_file)
 
             print("[CollaRE] Export completed!")
-            info("CollaRE Export completed!")
+            idaapi.info("CollaRE Export completed!")
         else:
             print("[CollaRE] Export failed! Not a CollaRE project!")
-            warning("This is not a CollaRE project!")
+            idaapi.warning("This is not a CollaRE project!")
         return 1
     
     # This action is always available.
@@ -97,10 +97,10 @@ class CollaREImportAction(idaapi.action_handler_t):
                     else:
                         set_cmt(comment_address,changes["comments"][comment],False)
             print("[*] Import completed!")
-            info("CollaRE Import completed!")
+            idaapi.info("CollaRE Import completed!")
         else:
             print("[!] This is not a CollaRE project!")
-            warning("This is not a CollaRE project!")
+            idaapi.warning("This is not a CollaRE project!")
         return 1
         
     # This action is always available.
