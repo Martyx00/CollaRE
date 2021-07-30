@@ -216,22 +216,16 @@ class Ui_Dialog(object):
         msg.setIcon(icon)
         x = msg.exec_()
     
-    def showProgressBox(self,title):
-        # Ugly but at least something
-        msg = QProgressDialog(self)
-        msg.setWindowTitle(title)
-        msg.setMinimum(0)
-        msg.setMaximum(0)
-        msg.setValue(0)
-        msg.setCancelButton(None)
-        width = QFontMetrics(self.font()).width(title) + 100
-        msg.resize(width, msg.height())
-
-        msg.show()
+    def start_task(self,title):
+        self.projectTab.setEnabled(False)
+        self.progress_label.setText(title)
         loop = QEventLoop()
         QTimer.singleShot(1000, loop.quit)
         loop.exec_()
-        return msg
+
+    def end_task(self):
+        self.projectTab.setEnabled(True)
+        self.progress_label.setText("")
 
     def which(self,program):
         # Search for programs in path
@@ -358,12 +352,12 @@ class Ui_Dialog(object):
         elif tool == "ida32":
             Popen([f"ida",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif tool == "asp":
-            progress = self.showProgressBox("Generating Android Studio Project")
+            self.start_task("Generating Android Studio Project")
             process = Popen([f"jadx","-d",file_path.replace("\\","\\\\")[:-4],"-e",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
             output, err = process.communicate()
-            progress.close()
             with ZipFile(os.path.join(file_path+".asp"), 'w') as zipObj:
                 self.addFolderToZip(zipObj,file_path[:-4],os.path.dirname(file_path))
+            self.end_task()
             self.showPopupBox("Android Studio Project Created","Automatic project creation was successful!\nPush local databases.",QMessageBox.Information)
         elif tool == "jeb":
             if os.name == "nt":
@@ -371,15 +365,16 @@ class Ui_Dialog(object):
             else:
                 jeb = "jeb"
             Popen([jeb,file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
-        elif tool == "ghidra":
-            progress = self.showProgressBox("Generating Ghidra Project")
+        elif tool == "ghidra":          
+            self.start_task("Generating Ghidra Project ... ")
+            
             if os.name == "nt":
                 headless = "analyzeHeadless.bat"
             else:
                 headless = "analyzeHeadless"
             process = Popen([headless, os.path.dirname(file_path.replace("\\","\\\\")),os.path.basename(file_path.replace("\\","\\\\")),'-import',file_path.replace("\\","\\\\")],stdout=PIPE, stderr=PIPE)
             output, err = process.communicate()
-            progress.close()
+            self.end_task()
             if b"ERROR REPORT" not in output:
                 # Success
                 with open(os.path.join(file_path+".rep","project.prp"),"r") as project_prp:
@@ -619,9 +614,12 @@ class Ui_Dialog(object):
                         db_file = filename + f".{filename_extension}"
                 values = {'path': path,"project":self.currentProject,"file":encoded_file,"file_name":db_file}
                 try:
+                    self.start_task("Pushing local DB file ... ")
                     response = requests.post(f'{self.server}/pushdbfile', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
+                    self.end_task()
                 except:
                     self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
+                    self.end_task()
                     return
                 if response.status_code != 200:
                     self.showPopupBox("Error Uploading File","Something went horribly wrong!",QMessageBox.Critical)
@@ -811,9 +809,12 @@ class Ui_Dialog(object):
             "version": version
         }
         try:
+            self.start_task("Opening DB file ... ")
             response = requests.post(f'{self.server}/opendbfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
+            self.end_task()
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
+            self.end_task()
             return
         if response.status_code != 200:
             self.showPopupBox("Error Opening File","Something went horribly wrong!",QMessageBox.Critical)
@@ -860,9 +861,12 @@ class Ui_Dialog(object):
             "file_name": path[-2]
             }
             try:
+                self.start_task("Downloading binary file ... ")
                 bin_file_response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
+                self.end_task()
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
+                self.end_task()
                 return
             if bin_file_response.status_code != 200:
                 self.showPopupBox("Error Donwloading File","Something went horribly wrong!",QMessageBox.Critical)
@@ -904,9 +908,12 @@ class Ui_Dialog(object):
             "version": version
         }
         try:
+            self.start_task("Checking out DB file ... ")
             response = requests.post(f'{self.server}/checkout', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
+            self.end_task()
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
+            self.end_task()
             return
         if response.status_code != 200:
             self.showPopupBox("Error During Check-Out","Something went horribly wrong!",QMessageBox.Critical)
@@ -936,9 +943,12 @@ class Ui_Dialog(object):
             "file_name": path[-2]
             }
             try:
+                self.start_task("Downloading binary file ... ")
                 bin_file_response = requests.post(f'{self.server}/getfile', json=data, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
+                self.end_task()
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
+                self.end_task()
                 return
             if bin_file_response.status_code != 200:
                 self.showPopupBox("Error Donwloading File","Something went horribly wrong!",QMessageBox.Critical)
@@ -1006,9 +1016,12 @@ class Ui_Dialog(object):
                 encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
             values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename,"checkout":checkout,"comment":comment,"changes":changes_content}
             try:
+                self.start_task("Checking in the DB file ... ")
                 response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
+                self.end_task()
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
+                self.end_task()
                 return
             if response.status_code != 200:
                 self.showPopupBox("Error During Check-In","Something went horribly wrong!",QMessageBox.Critical)
@@ -1305,6 +1318,10 @@ class Ui_Dialog(object):
         self.mainTabWidget.setGeometry(QtCore.QRect(20, 10, 981, 721))
         self.mainTabWidget.setObjectName("mainTabWidget")
 
+        self.progress_label = QtWidgets.QLabel(self.mainTabWidget)
+        self.progress_label.setGeometry(QtCore.QRect(300, 7, 211, 17))
+        self.progress_label.setObjectName("label")
+        
         layout.addWidget(self.mainTabWidget)
 
         self.connectionTab = QtWidgets.QWidget()
@@ -1413,6 +1430,7 @@ class Ui_Dialog(object):
         self.createNewProjectButton.setGeometry(QtCore.QRect(10, 410, 421, 25))
         self.createNewProjectButton.setObjectName("createNewProjectButton")
         self.frame.raise_()
+        self.progress_label.raise_()
         self.existingProjectFrame.raise_()
         self.serverText.raise_()
         self.label.raise_()
@@ -1592,6 +1610,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "CollaRE Client"))
         Dialog.setWindowIcon(QIcon(os.path.join(current_running_file_dir,"icons","collare.png")))
         self.label.setText(_translate("Dialog", "Server (https://remote.com/):"))
+        self.progress_label.setText(_translate("Dialog", ""))
         self.label_2.setText(_translate("Dialog", "Username:"))
         self.label_3.setText(_translate("Dialog", "Password:"))
         self.label_6.setText(_translate("Dialog", "Avaialable Projects:"))
