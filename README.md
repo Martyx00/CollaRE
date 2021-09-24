@@ -25,6 +25,8 @@ Terminal=false
 
 ```
 
+Alternatively use one of the binary distributions in the relases (`collare_linux_x64.zip` or `collare_win_x86.zip`).
+
 ## Supported Tools
 
 ### Cutter (Rizin)
