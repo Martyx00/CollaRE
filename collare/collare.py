@@ -16,10 +16,11 @@ supported_db_names = ["bndb","i64","idb","hop","rzdb","ghdb","jdb2","asp"]
 requests.urllib3.disable_warnings()
 
 class ProjectTree(QTreeWidget):
-    def __init__(self, parent):
+    def __init__(self, parent,window):
         super(ProjectTree, self).__init__(parent)
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
+        self.window = window
 
     def setProjectData(self,server,projectName,username,password,cert,parent):
         self.server = server
@@ -66,6 +67,7 @@ class ProjectTree(QTreeWidget):
         return ["*"]
 
     def uploadFile(self,fsPath,remotePath):
+        self.window.start_task("Uploading file ... ")
         with open(fsPath, "rb") as data_file:
             encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
         values = {'path': remotePath,"project":self.projectName,"file":encoded_file,"file_name":os.path.basename(fsPath)}
@@ -78,16 +80,22 @@ class ProjectTree(QTreeWidget):
             self.parent.refreshProject()
         except:
             self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
+            self.window.end_task()
             return
+        self.window.end_task()
+            
 
     def uploadDir(self,fs_path,path):
+        self.window.start_task("Uploading directory ... ")
         if not re.match(r'^\w+$',os.path.basename(fs_path)):
             self.showPopupBox("Invalid Folder Name",f"Folder name can contain only letters, numbers and '_' (underscores). Failed with: {os.path.basename(fs_path)}",QMessageBox.Critical)
+            self.window.end_task()
             return 
         for directory, subdirectories, files in os.walk(fs_path):
             for d in subdirectories:
                 if not re.match(r'^\w+$',d):
                     self.showPopupBox("Invalid Folder Name",f"Folder name can contain only letters, numbers and '_' (underscores). Failed with: {d}",QMessageBox.Critical)
+                    self.window.end_task()
                     return 
         # Creates the initial dir
         self.mkdir(path,os.path.basename(fs_path))
@@ -99,6 +107,7 @@ class ProjectTree(QTreeWidget):
                 self.mkdir(current_path,d)
             for f in files:
                 self.uploadFile(os.path.join(directory,f),current_path)
+        self.window.end_task()
 
 
     def mkdir(self,path,dirname):
@@ -1450,7 +1459,7 @@ class Ui_Dialog(object):
         self.projectTab.setLayout(projectLayout)
         
         #self.projectTreeView = QtWidgets.QTreeWidget(self.projectTab)
-        self.projectTreeView = ProjectTree(self.projectTab)
+        self.projectTreeView = ProjectTree(self.projectTab,self)
         self.projectTreeView.setGeometry(QtCore.QRect(10, 10, 961, 671))
         self.projectTreeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)  
         self.projectTreeView.customContextMenuRequested.connect(self.rightClickMenuHandle)  

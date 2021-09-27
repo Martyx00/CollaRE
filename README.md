@@ -1,5 +1,5 @@
 
-# CollaRE v1.1
+# CollaRE v1.2
 
 ![CollaRE](./collare/icons/collare-full-white.png)
 
@@ -11,7 +11,7 @@ The [back-end](https://github.com/Martyx00/CollaREServer) of the tool is a simpl
 
 ## Installation
 
-Grab the latest release from this repository and run `sudo python3 setup.py install` on Linux or use command line on Windows and run `python3 setup.py install`. On Linux this will install the tool to the `PATH` and you will be able to run it simply with `collare` command. On Windows this will put the file into the `C:\Users\<USERNAME>\AppData\Local\Programs\Python\<PYTHON_VERSION>\Scripts\collare.exe` (depending on how you installed Python).
+Grab the latest binary release from this repository or clone the repo and run `sudo python3 setup.py install` on Linux or use command line on Windows and run `python3 setup.py install`. On Linux this will install the tool to the `PATH` and you will be able to run it simply with `collare` command. On Windows this will put the file into the `C:\Users\<USERNAME>\AppData\Local\Programs\Python\<PYTHON_VERSION>\Scripts\collare.exe` (depending on how you installed Python).
 
 For Gnome based desktop UIs you can use following desktop file (paths to files may vary):
 ```
@@ -24,8 +24,6 @@ Icon=/usr/local/lib/python3.8/dist-packages/collare-1.0-py3.8.egg/collare/icons/
 Terminal=false
 
 ```
-
-Alternatively use one of the binary distributions in the relases (`collare_linux_x64.zip` or `collare_win_x86.zip`).
 
 ## Supported Tools
 
