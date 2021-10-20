@@ -8,7 +8,6 @@ from functools import reduce
 from zipfile import ZipFile
 import os, requests, json, re, base64, shutil, sys, time
 
-
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
 connected = False
@@ -1298,6 +1297,12 @@ class Ui_Dialog(object):
                 return
             try:
                 response = requests.get(f'{self.server}/ping', auth=(self.username, self.password), verify=self.cert, timeout=(3,40))
+            except requests.exceptions.SSLError:
+                self.showPopupBox("Cannot Initiate Connection","Certificate validation failure. Make sure that the hostname in the \"Server\" field matches the one in the certificate!",QMessageBox.Critical)
+                return
+            except requests.exceptions.ConnectionError:
+                self.showPopupBox("Cannot Initiate Connection","Cannot reach the server!",QMessageBox.Critical)
+                return
             except:
                 self.showPopupBox("Cannot Initiate Connection","Connection not successful! Check provided data and try again!",QMessageBox.Critical)
                 return
@@ -1305,7 +1310,7 @@ class Ui_Dialog(object):
                 self.onSuccessConnect()
                 self.storeConnectionDetails(self.server,self.username,self.cert)
             else:
-                self.showPopupBox("Cannot Initiate Connection","Connection not successful! Check provided data and try again!",QMessageBox.Critical)
+                self.showPopupBox("Cannot Initiate Connection","Login failed!",QMessageBox.Critical)
                 return
         else:
             self.onDisconnect()
