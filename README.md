@@ -1,5 +1,5 @@
 
-# CollaRE v1.3
+# CollaRE v1.4
 
 ![CollaRE](./collare/icons/collare-full-white.png)
 
