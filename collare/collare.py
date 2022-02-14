@@ -802,10 +802,11 @@ class Ui_Dialog(object):
         # Double click on item, open only if parent is binary - i.e. we are clicking on db file
         selected_item = self.projectTreeView.selectedItems()
         if selected_item:
-            if selected_item[0].parent().whatsThis(0) == "binary":
-                manifestPath = self.getPathToRoot(selected_item[0])[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(selected_item[0])[-1]]
-                version = reduce(dict.get,manifestPath,self.currentProjectManifest)["latest"]
-                self.openDBFile(self.getPathToRoot(selected_item[0]),version)
+            if selected_item[0].parent():
+                if selected_item[0].parent().whatsThis(0) == "binary":
+                    manifestPath = self.getPathToRoot(selected_item[0])[:-1] + ["__rev_dbs__"] + [self.getPathToRoot(selected_item[0])[-1]]
+                    version = reduce(dict.get,manifestPath,self.currentProjectManifest)["latest"]
+                    self.openDBFile(self.getPathToRoot(selected_item[0]),version)
 
     def openDBFile(self,path,version):
         # Opens db file based on the relevant tool
