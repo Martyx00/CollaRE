@@ -465,6 +465,8 @@ class Ui_Dialog(object):
                     if "asp" in disabled_tool:
                         open_asp.setEnabled(False)
                 # Enable/Disable tools based on PATH
+                if not self.which("ida"):
+                    open_ida32.setEnabled(False)
                 if not self.which("ida64"):
                     open_ida.setEnabled(False)
                 if not self.which("binaryninja"):
