@@ -71,7 +71,7 @@ class ProjectTree(QTreeWidget):
             encoded_file = base64.b64encode(data_file.read()).decode("utf-8") 
         values = {'path': remotePath,"project":self.projectName,"file":encoded_file,"file_name":os.path.basename(fsPath)}
         try:
-            response = requests.post(f'{self.server}/push', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(5,100))
+            response = requests.post(f'{self.server}/push', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(20,300))
             if response.status_code != 200:
                 self.showPopupBox("Error Uploading File","Something went horribly wrong!",QMessageBox.Critical)
             elif response.text == "FILE_ALREADY_EXISTS":
@@ -625,7 +625,7 @@ class Ui_Dialog(object):
                 values = {'path': path,"project":self.currentProject,"file":encoded_file,"file_name":db_file}
                 try:
                     self.start_task("Pushing local DB file ... ")
-                    response = requests.post(f'{self.server}/pushdbfile', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(5,100))
+                    response = requests.post(f'{self.server}/pushdbfile', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(20,300))
                     self.end_task()
                 except:
                     self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
@@ -1028,7 +1028,7 @@ class Ui_Dialog(object):
             values = {'path': path[:-1],"project":self.currentProject,"file":encoded_file,"file_name":filename,"checkout":checkout,"comment":comment,"changes":changes_content}
             try:
                 self.start_task("Checking in the DB file ... ")
-                response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(5,100))
+                response = requests.post(f'{self.server}/checkin', json=values, auth=(self.username, self.password), verify=self.cert, timeout=(20,300))
                 self.end_task()
             except:
                 self.showPopupBox("Connection Error","Connection to the server is not working!",QMessageBox.Critical)
