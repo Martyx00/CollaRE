@@ -210,14 +210,13 @@ class Ui_Dialog(object):
                 connection_data = json.load(connection_file)
                 self.serverText.setText(connection_data["server"])
                 self.usernameText.setText(connection_data["username"])
-                if connection_data["cert"] == False:
-                    self.serverCertPathText.setText("")
-                else:
-                    self.serverCertPathText.setText(connection_data["cert"])
+                self.serverCertPathText.setText(connection_data["cert"])
 
     def storeConnectionDetails(self,server,username,cert):
         # Store connection details
         with open(str(collare_home / "connection.json"),"w") as connection_file:
+            if cert == False
+                cert = "False"
             json.dump({"username":username,"server":server,"cert":cert}, connection_file)
 
     def showPopupBox(self,title,text,icon):
@@ -1298,8 +1297,7 @@ class Ui_Dialog(object):
             self.username = self.usernameText.text()
             self.password = self.passwordText.text()
             self.cert = self.serverCertPathText.text()
-            print(self.cert)
-            if self.cert == "":
+            if self.cert == "False":
                 self.cert = False
             if not self.server or not self.username or not self.password:
                 self.showPopupBox("Cannot Initiate Connection","Please make sure that all fields are filled!",QMessageBox.Critical)
