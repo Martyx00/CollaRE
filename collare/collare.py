@@ -358,9 +358,9 @@ class Ui_Dialog(object):
         elif tool == "cutter":
             Popen([f"Cutter",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,cwd=destination.replace("\\","\\\\"))
         elif tool == "ida":
-            Popen([f"ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,env=dict(os.environ, QT_QPA_PLATFORM="xcb"))
         elif tool == "ida32":
-            Popen([f"ida",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f"ida",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,env=dict(os.environ, QT_QPA_PLATFORM="xcb"))
         elif tool == "asp":
             self.start_task("Generating Android Studio Project")
             process = Popen([f"jadx","-d",file_path.replace("\\","\\\\")[:-4],"-e",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
@@ -892,9 +892,9 @@ class Ui_Dialog(object):
         elif path[-1] == "asp":
             Popen(['android-studio',os.path.join(destination,filename.replace(".apk.asp","").replace(".jar.asp","")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
-            Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f'ida64',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,env=dict(os.environ, QT_QPA_PLATFORM="xcb"))
         elif path[-1] == "idb":
-            Popen([f'ida',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen([f'ida',file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,env=dict(os.environ, QT_QPA_PLATFORM="xcb"))
         elif path[-1] == "jdb2":
 
             # has to be jeb.bat for windows
@@ -979,9 +979,9 @@ class Ui_Dialog(object):
             shutil.unpack_archive(file_path, destination, "zip") 
             Popen(['android-studio',os.path.join(destination,filename.replace(".apk.asp","").replace(".jar.asp","")).replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
         elif path[-1] == "i64":
-            Popen(["ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(["ida64",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,env=dict(os.environ, QT_QPA_PLATFORM="xcb"))
         elif path[-1] == "idb":
-            Popen(["ida",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True)
+            Popen(["ida",file_path.replace("\\","\\\\")],stdin=None, stdout=None, stderr=None, close_fds=True,env=dict(os.environ, QT_QPA_PLATFORM="xcb"))
         elif path[-1] == "jdb2":
             if os.name == "nt":
                 jeb = "jeb.bat"
