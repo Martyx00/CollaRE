@@ -6,7 +6,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 from functools import reduce
 from zipfile import ZipFile
-import os, requests, json, re, base64, shutil, sys, time
+import os, requests, json, re, base64, shutil, sys, time, traceback
 
 collare_home = Path.home() / ".collare_projects"
 current_running_file_dir, filename = os.path.split(os.path.abspath(__file__))
@@ -210,7 +210,10 @@ class Ui_Dialog(object):
                 connection_data = json.load(connection_file)
                 self.serverText.setText(connection_data["server"])
                 self.usernameText.setText(connection_data["username"])
-                self.serverCertPathText.setText(connection_data["cert"])
+                if connection_data["cert"] == False:
+                    self.serverCertPathText.setText("")
+                else:
+                    self.serverCertPathText.setText(connection_data["cert"])
 
     def storeConnectionDetails(self,server,username,cert):
         # Store connection details
@@ -1295,13 +1298,17 @@ class Ui_Dialog(object):
             self.username = self.usernameText.text()
             self.password = self.passwordText.text()
             self.cert = self.serverCertPathText.text()
-            if not self.server or not self.username or not self.password or not self.cert:
+            print(self.cert)
+            if self.cert == "":
+                self.cert = False
+            if not self.server or not self.username or not self.password:
                 self.showPopupBox("Cannot Initiate Connection","Please make sure that all fields are filled!",QMessageBox.Critical)
                 return
             try:
                 response = requests.get(f'{self.server}/ping', auth=(self.username, self.password), verify=self.cert, timeout=(5,100))
-            except requests.exceptions.SSLError:
+            except requests.exceptions.SSLError as e:
                 self.showPopupBox("Cannot Initiate Connection","Certificate validation failure. Make sure that the hostname in the \"Server\" field matches the one in the certificate!",QMessageBox.Critical)
+                traceback.print_exc()
                 return
             except requests.exceptions.ConnectionError:
                 self.showPopupBox("Cannot Initiate Connection","Cannot reach the server!",QMessageBox.Critical)
