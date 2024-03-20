@@ -215,7 +215,7 @@ class Ui_Dialog(object):
     def storeConnectionDetails(self,server,username,cert):
         # Store connection details
         with open(str(collare_home / "connection.json"),"w") as connection_file:
-            if cert == False
+            if cert == False:
                 cert = "False"
             json.dump({"username":username,"server":server,"cert":cert}, connection_file)
 
